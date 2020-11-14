@@ -1,15 +1,23 @@
-class Paddle {
-
-    static PADDLE_SIZE = new p5.Vector(20, 120)
-    static PADDLE_H_OFFSET = 50
-    static VERTICAL_DELTA = 10
-
-    constructor (x, y) {
+class Rectangle {
+    constructor (x, y, s) {
         this.pos = new p5.Vector(x, y)
+        this.size = s
     }
 
     draw() {
-        rect(this.pos.x, this.pos.y, Paddle.PADDLE_SIZE.x, Paddle.PADDLE_SIZE.y)
+        fill(255)
+        rect(this.pos.x, this.pos.y, this.size.x, this.size.y)
+    }
+}
+
+class Paddle extends Rectangle {
+
+    static PADDLE_SIZE = new p5.Vector(20, 120)
+    static PADDLE_H_OFFSET = 120
+    static VERTICAL_DELTA = 10
+
+    constructor (x, y) {
+        super(x, y, Paddle.PADDLE_SIZE)
     }
 
     update() {
