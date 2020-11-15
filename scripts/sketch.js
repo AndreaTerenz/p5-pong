@@ -1,25 +1,46 @@
-var p1, p2 = undefined
+var p1 = undefined, p2 = undefined
 var b = undefined
+var score1 = 0, score2 = 0
+
+var score_label
 
 function setup() {
     createCanvas(1000, 500);
     
+    score_label = createP("Player 1: 0 </br> Player 2: 0")
     p1 = new Paddle(Paddle.PADDLE_H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2);
     p2 = new Paddle((width - Paddle.PADDLE_SIZE.x) - Paddle.PADDLE_H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2);
     b = new Ball()
 }
 
 function draw() {
-    background(0);
+    background(0)
+
+    fill(100)
+    rect(0, 0, Paddle.PADDLE_H_OFFSET, height)
+    rect(width-Paddle.PADDLE_H_OFFSET, 0, Paddle.PADDLE_H_OFFSET, height)
+
     p1.update()
     p2.update()
-    
-
-    p1.draw();
-    p2.draw();
-
     b.update(p1, p2)
-    b.draw()
+
+    if (check_score()) {
+        console.log("player 1 score: ", score1);
+        console.log("player 2 score: ", score2);
+        score_label.html("Player 1: " + score1 + " </br> Player 2: " + score2)
+
+        b.reset()
+        p1.reset()
+        p2.reset()
+    }
+}
+
+function check_score() {
+
+    if (b.pos.x <= p1.pos.x) score2+=1
+    if (b.pos.x >= p2.pos.x + Paddle.PADDLE_SIZE.x) score2+=1
+
+    return (b.pos.x <= p1.pos.x || b.pos.x >= p2.pos.x + Paddle.PADDLE_SIZE.x)
 }
 
 function keyPressed() {

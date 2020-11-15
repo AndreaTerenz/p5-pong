@@ -13,7 +13,7 @@ class Rectangle {
         return (p.x >= this.pos.x && p.y >= this.pos.y && p.x <= this.pos.x+this.size.x && p.y <= this.pos.y+this.size.y)
     }
 
-    translate_out(p) {
+    translate_out(p, offset) {
         var output = undefined
 
         if (this.contains(p)) {
@@ -29,8 +29,6 @@ class Rectangle {
             if (p.y-dy-1 < 0) { dy = Infinity; }
             if (p.y+dh+1 > height) { dh = Infinity; }
             if (p.x+dw+1 > width)  { dw = Infinity; }
-
-            var offset = Ball.BALL_RADIUS;
 
             if (dx<=dy && dx<dw && dx<dh)
             {
@@ -63,6 +61,7 @@ class Paddle extends Rectangle {
     constructor (x, y) {
         super(x, y, Paddle.PADDLE_SIZE)
 
+        this.init_pos = createVector(x, y)
         this.v_speed = 0
         this.can_move = false
     }
@@ -74,21 +73,14 @@ class Paddle extends Rectangle {
 
     update() {
         if (this.can_move) this.move(this.v_speed)
+
+        this.draw()
     }
 
-    draw() {
-        super.draw()
-        /*
-        var tl_corner = createVector(this.pos.x - Ball.BALL_RADIUS, this.pos.y - Ball.BALL_RADIUS)
-        var br_corner = createVector(this.pos.x + Paddle.PADDLE_SIZE.x + Ball.BALL_RADIUS, this.pos.y + Paddle.PADDLE_SIZE.y + Ball.BALL_RADIUS)
-
-        stroke(255, 0, 0)
-        noFill()
-        rect(tl_corner.x, tl_corner.y, Paddle.PADDLE_SIZE.x + Ball.BALL_RADIUS*2, Paddle.PADDLE_SIZE.y + Ball.BALL_RADIUS*2)
-
-        fill(255, 0, 0)
-        circle(tl_corner.x, tl_corner.y, 5)
-        circle(br_corner.x, br_corner.y, 5)*/
+    reset() {
+        this.pos = this.init_pos.copy()
+        this.v_speed = 0
+        this.can_move = false
     }
 
     move(delta) {
