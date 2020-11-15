@@ -1,7 +1,7 @@
 var p1 = undefined, p2 = undefined
 var b = undefined
 var score1 = 0, score2 = 0
-
+var game_started = false
 var score_label
 
 function setup() {
@@ -22,22 +22,32 @@ function draw() {
 
     p1.update()
     p2.update()
-    b.update(p1, p2)
 
-    if (check_score()) {
-        console.log("player 1 score: ", score1);
-        console.log("player 2 score: ", score2);
-        score_label.html("Player 1: " + score1 + " </br> Player 2: " + score2)
+    if (game_started) {
+        b.update(p1, p2)
 
-        b.reset()
-        p1.reset()
-        p2.reset()
+        if (check_score()) {
+            console.log("player 1 score: ", score1);
+            console.log("player 2 score: ", score2);
+            score_label.html("Player 1: " + score1 + " </br> Player 2: " + score2)
+
+            b.reset()
+            p1.reset()
+            p2.reset()
+        }
+    }
+    else {
+        textFont("Roboto mono")
+        textSize(30)
+        textAlign(CENTER, CENTER)
+
+        fill(255)
+        text("Press arrow keys to start", width/2, height/2)
     }
 }
 
 function check_score() {
-
-    if (b.pos.x <= p1.pos.x) score2+=1
+    if (b.pos.x <= p1.pos.x) score1+=1
     if (b.pos.x >= p2.pos.x + Paddle.PADDLE_SIZE.x) score2+=1
 
     return (b.pos.x <= p1.pos.x || b.pos.x >= p2.pos.x + Paddle.PADDLE_SIZE.x)
@@ -45,6 +55,8 @@ function check_score() {
 
 function keyPressed() {
     if (keyCode == UP_ARROW || keyCode == DOWN_ARROW) {
+        game_started = true
+
         b.set_movable(true)
 
         if (keyCode == UP_ARROW) {
