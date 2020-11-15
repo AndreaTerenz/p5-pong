@@ -1,12 +1,11 @@
 class Ball {
     
-    static INIT_BALL_VEL = new p5.Vector(5, 6)
     static MAX_VEL = 10
     static BALL_RADIUS = 7
 
     constructor() {
         this.pos = new p5.Vector(width/2, height/2)
-        this.speed = Ball.INIT_BALL_VEL.copy()
+        this.speed = p5.Vector.random2D()
         this.can_update = false
         this.gianfranco = false
     }
@@ -17,7 +16,7 @@ class Ball {
     
     reset() {
         this.pos = new p5.Vector(width/2, height/2)
-        this.speed = Ball.INIT_BALL_VEL.copy()
+        this.speed = p5.Vector.random2D()
         this.can_update = false
         this.gianfranco = false
     }
