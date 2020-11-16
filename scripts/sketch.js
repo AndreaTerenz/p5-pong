@@ -2,7 +2,7 @@ var p1 = undefined, p2 = undefined
 var b = undefined
 var score1 = 0, score2 = 0
 var game_started = false
-var score_limit = 2
+var score_limit = 20
 var winner = 0  
 
 function setup() {
@@ -64,7 +64,7 @@ function draw_ingame_txt() {
     fill(255, 255, 255, 130)
     textAlign(CENTER, CENTER)
     textSize(18)
-    text("First player to " + str(score_limit) + " wins", width / 2, height - 40)
+    text("First player to " + str(score_limit) + " points wins", width / 2, height - 40)
     textSize(30)
 }
 
