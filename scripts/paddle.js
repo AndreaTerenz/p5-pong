@@ -55,7 +55,7 @@ class Rectangle {
 class Paddle extends Rectangle {
 
     static PADDLE_SIZE = new p5.Vector(20, 120)
-    static PADDLE_H_OFFSET = 120
+    static PADDLE_H_OFFSET = 105
     static VERTICAL_DELTA = 7
 
     constructor (x, y) {

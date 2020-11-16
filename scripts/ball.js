@@ -1,11 +1,12 @@
 class Ball {
     
-    static MAX_VEL = 10
+    static MAX_VEL = 8
     static BALL_RADIUS = 7
+    static MAX_VEL_ANGLE = 60
 
     constructor() {
         this.pos = new p5.Vector(width/2, height/2)
-        this.speed = p5.Vector.random2D()
+        this.speed = this.get_random_speed()
         this.can_update = false
         this.gianfranco = false
     }
@@ -16,9 +17,11 @@ class Ball {
     
     reset() {
         this.pos = new p5.Vector(width/2, height/2)
-        this.speed = p5.Vector.random2D()
+        this.speed = this.get_random_speed()
         this.can_update = false
         this.gianfranco = false
+
+
     }
 
     update(p1, p2) {
@@ -75,5 +78,12 @@ class Ball {
 
     draw() {
         circle(this.pos.x, this.pos.y, Ball.BALL_RADIUS * 2)
+    }
+
+    get_random_speed() {
+        var angle_tan = random(tan(-Ball.MAX_VEL_ANGLE), tan(Ball.MAX_VEL_ANGLE))
+        var angle = atan(angle_tan)
+
+        return p5.Vector.fromAngle(angle + PI*random([0, 1]))
     }
 }
