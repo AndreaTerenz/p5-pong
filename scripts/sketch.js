@@ -98,19 +98,27 @@ function check_winner() {
     return winner != 0    
 }
 
+function up_key_pressed() {
+    return (keyCode == UP_ARROW || key == 'w')
+}
+
+function down_key_pressed() {
+    return (keyCode == DOWN_ARROW || key == 's')
+}
+
 function keyPressed() {
-    if (keyCode == UP_ARROW || keyCode == DOWN_ARROW) {
+    if (up_key_pressed() || down_key_pressed()) {
         game_started = true
         winner = 0  
 
         b.set_movable(true)
 
-        if (keyCode == UP_ARROW) {
+        if (up_key_pressed()) {
             p1.set_direction(-1)
             p2.set_direction(-1)
         }
 
-        if (keyCode == DOWN_ARROW) {
+        if (down_key_pressed()) {
             p1.set_direction(1)
             p2.set_direction(1)
         }
@@ -118,7 +126,7 @@ function keyPressed() {
 }
 
 function keyReleased() {
-    if (keyCode == UP_ARROW || keyCode == DOWN_ARROW) {
+    if (up_key_pressed() || down_key_pressed()) {
         p1.set_direction(0)
         p2.set_direction(0)        
     }
