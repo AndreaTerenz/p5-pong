@@ -2,7 +2,7 @@ var p1 = undefined, p2 = undefined
 var b = undefined
 var score1 = 0, score2 = 0
 var game_started = false
-var score_limit = prompt("Enter score limit: ", 20);
+var score_limit = 20 // prompt("Enter score limit: ", 20);
 var winner = 0  
 
 function setup() {
@@ -72,7 +72,7 @@ function draw_start_msg() {
     fill(255)
     textAlign(CENTER, CENTER)
 
-    var msg = "Press arrow keys to start"
+    var msg = "Press UP/DOWN or W/S to start"
 
     switch (winner) {
         case 1: msg = "Player 1 won!\n" + msg; break;
