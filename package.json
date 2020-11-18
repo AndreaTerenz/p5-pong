@@ -1,0 +1,28 @@
+{
+  "name": "pong",
+  "version": "0.0.1",
+  "description": "Simple pong clone made with p5.js and sockets.io",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AndreaTerenz/p5-pong.git"
+  },
+  "keywords": [
+    "pong",
+    "p5",
+    "sockets"
+  ],
+  "author": "AndreaTerenz",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AndreaTerenz/p5-pong/issues"
+  },
+  "homepage": "https://github.com/AndreaTerenz/p5-pong#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^3.0.2"
+  }
+}
