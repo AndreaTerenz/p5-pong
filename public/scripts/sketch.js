@@ -5,10 +5,14 @@ var game_started = false
 var score_limit = 20 // prompt("Enter score limit: ", 20);
 var winner = 0  
 
+var socket
+
 function setup() {
     Ball.MAX_VEL_ANGLE = radians(Ball.MAX_VEL_ANGLE)
 
-    createCanvas(1000, 500);
+    let cnv = createCanvas(1000, 500)
+    cnv.parent("sketch_container")
+
     p1 = new Paddle(Paddle.PADDLE_H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2);
     p2 = new Paddle((width - Paddle.PADDLE_SIZE.x) - Paddle.PADDLE_H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2);
     b = new Ball()
@@ -20,6 +24,19 @@ function setup() {
     drawingContext.shadowOffsetY = 0;
     drawingContext.shadowBlur = 10;
     drawingContext.shadowColor = "black";
+
+    socket = io.connect("http://localhost:3000")
+    socket.on("connection_data", (data) => {
+        set_selection_info(data)
+    })
+}
+
+function set_selection_info(data) {
+    let id_label = select("#socket_id")
+    let room_label = select("#room_id")
+
+    id_label.html("Socket ID: " + data.id)
+    room_label.html("Room: " + data.room)
 }
 
 function draw() {
