@@ -29,13 +29,20 @@ function setup() {
     socket.on("connection_data", (data) => {
         set_selection_info(data)
     })
+    socket.on("room_filled", (players) => {
+        let opp = (players[0] == socket.id) ? players[1] : players[0]
+        let opponent_label = select("#opponent_id")
+        opponent_label.html("Opponent ID: " + opp)
+    })
 }
 
 function set_selection_info(data) {
     let id_label = select("#socket_id")
+    let opponent_label = select("#opponent_id")
     let room_label = select("#room_id")
 
-    id_label.html("Socket ID: " + data.id)
+    id_label.html("Player ID: " + data.id)
+    opponent_label.html("Opponent ID: " + data.opponent)
     room_label.html("Room: " + data.room)
 }
 
