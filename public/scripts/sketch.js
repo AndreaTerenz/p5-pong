@@ -1,7 +1,8 @@
 var p1 = undefined, p2 = undefined
 var b = undefined
 var score1 = 0, score2 = 0
-var game_started = false
+var room_filled = false
+var playing = false
 var score_limit = 20 // prompt("Enter score limit: ", 20);
 var winner = 0  
 
@@ -25,14 +26,26 @@ function setup() {
     drawingContext.shadowBlur = 10;
     drawingContext.shadowColor = "black";
 
-    socket = io.connect("http://localhost:3000")
-    socket.on("connection_data", (data) => {
-        set_selection_info(data)
-    })
+    setup_socket()
+}
+
+function setup_socket() {
+    let address = (false) ? "http://95.248.171.171:3000" : "http://localhost:3000"
+
+    socket = io.connect(address)
+
+    socket.on("connection_data", (data) => { set_selection_info(data) })
+
     socket.on("room_filled", (players) => {
+        room_filled = true
         let opp = (players[0] == socket.id) ? players[1] : players[0]
         let opponent_label = select("#opponent_id")
         opponent_label.html("Opponent ID: " + opp)
+    })
+
+    socket.on("opp_moved", (delta) => {
+        p2.set_direction(delta)
+        b.set_movable(true)
     })
 }
 
@@ -53,28 +66,34 @@ function draw() {
     rect(0, 0, Paddle.PADDLE_H_OFFSET, height)
     rect(width-Paddle.PADDLE_H_OFFSET, 0, Paddle.PADDLE_H_OFFSET, height)
 
-    p1.update()
-    p2.update()
+    if (room_filled)
+    {
+        p1.update()
+        p2.update()
 
-    if (game_started) {
-        b.update(p1, p2)
+        if (playing) {
+            b.update(p1, p2)
 
-        draw_ingame_txt()
+            draw_ingame_txt()
 
-        if (check_score()) {
-            b.reset()
-            p1.reset()
-            p2.reset()
+            if (check_score()) {
+                b.reset()
+                p1.reset()
+                p2.reset()
 
-            if (check_winner()) {
-                game_started = false
-                score1 = 0
-                score2 = 0
+                if (check_winner()) {
+                    playing = false
+                    score1 = 0
+                    score2 = 0
+                }
             }
+        }
+        else {
+            draw_start_msg()
         }
     }
     else {
-        draw_start_msg()
+        draw_waiting_msg()
     }
 }
 
@@ -106,6 +125,15 @@ function draw_start_msg() {
     text(msg, width / 2, height / 2)
 }
 
+function draw_waiting_msg() {
+    fill(255)
+    textAlign(CENTER, CENTER)
+
+    var msg = "Waiting for second player..."
+
+    text(msg, width / 2, height / 2)
+}
+
 function check_score() {
     if (b.pos.x <= p1.pos.x) score2+=1
     if (b.pos.x >= p2.pos.x + Paddle.PADDLE_SIZE.x) score1+=1
@@ -130,29 +158,33 @@ function down_key_pressed() {
     return (keyCode == DOWN_ARROW || key == 's')
 }
 
+function accept_keypress() {
+    return ((up_key_pressed() || down_key_pressed()) && room_filled)
+}
+
 function keyPressed() {
-    if (up_key_pressed() || down_key_pressed()) {
-        game_started = true
+    if (accept_keypress()) {
+        playing = true
         winner = 0  
 
         b.set_movable(true)
 
         if (up_key_pressed()) {
             p1.set_direction(-1)
-            p2.set_direction(-1)
+            socket.emit("moved", -1)
         }
 
         if (down_key_pressed()) {
             p1.set_direction(1)
-            p2.set_direction(1)
+            socket.emit("moved", 1)
         }
     }
 }
 
 function keyReleased() {
-    if (up_key_pressed() || down_key_pressed()) {
+    if (accept_keypress()) {
         p1.set_direction(0)
-        p2.set_direction(0)        
+        socket.emit("moved", 0) 
     }
 }
 

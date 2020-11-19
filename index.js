@@ -3,7 +3,8 @@ var express = require("express")
 var app = express()
 app.use(express.static("public"))
 
-var server = app.listen(3000, () => { console.log("Server started"); })
+var port = 3500
+var server = app.listen(port, () => console.log("Server listening on port " + port))
 
 var io = require("socket.io")(server)
 
@@ -38,11 +39,16 @@ io.on("connect", (socket) => {
         rooms_set.delete(next_room)
     }
 
-    socket.on('disconnect', function(){
+    socket.on('disconnect', () => {
         console.log("Client " + socket.id + " disconnected");
 
         rooms_set.add(socket_room)
     });
+
+    socket.on('moved', (delta) => {
+        console.log("Client " + socket.id + " moved by :" + delta);
+        socket.to(socket_room).emit("opp_moved", delta)
+    })
 })
 
 function get_room_size(socket_room) {
@@ -50,4 +56,9 @@ function get_room_size(socket_room) {
 
     return (room_ref) ? room_ref.size : -1
 }
+
+process.on('SIGINT', () => { 
+    console.log("\rExiting") 
+    process.exit()
+});
 
