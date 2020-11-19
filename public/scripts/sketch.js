@@ -42,7 +42,7 @@ function set_selection_info(data) {
     let room_label = select("#room_id")
 
     id_label.html("Player ID: " + data.id)
-    opponent_label.html("Opponent ID: " + data.opponent)
+    opponent_label.html("Waiting for other player...")
     room_label.html("Room: " + data.room)
 }
 
