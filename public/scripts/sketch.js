@@ -15,14 +15,14 @@ var game_status = {
 
     start() {
         if (this.room_filled) {
-            this.winner = 0,
+            this.winner = 0
             this.playing = true
         }
     },
 
     reset() {
-        this.reset_scores(),
-        this.room_filled = false,
+        this.reset_scores()
+        this.room_filled = false
         this.playing = false
     },
 
@@ -44,7 +44,7 @@ var game_status = {
         if (b_pos.x >= p2_pos.x + Paddle.PADDLE_SIZE.x) this.score_1+=1
     
         if (b_pos.x <= p1_pos.x || b_pos.x >= p2_pos.x + Paddle.PADDLE_SIZE.x) {
-            check_winner()
+            this.check_winner()
             return true
         }
 
@@ -97,8 +97,9 @@ function setup_socket() {
 
     socket.on("opp_moved", (delta) => {
         game_status.start()
-        opp_p.set_direction(delta)
         b.set_movable(true)
+        
+        opp_p.set_direction(delta)
     })
 
     socket.on("opp_left", () => {
@@ -151,22 +152,35 @@ function draw() {
 }
 
 function draw_ingame_txt() {
+    //Score
     fill(255, 255, 255, 180)
     textAlign(RIGHT, CENTER)
+    textSize(30)
     text(str(game_status.score_1), (width / 2 - Paddle.PADDLE_H_OFFSET) / 2 + Paddle.PADDLE_H_OFFSET, height / 2)
     textAlign(LEFT, CENTER)
     text(str(game_status.score_2), width - ((width / 2 - Paddle.PADDLE_H_OFFSET) / 2 + Paddle.PADDLE_H_OFFSET), height / 2)
 
+    //Score limit msg
     fill(255, 255, 255, 130)
     textAlign(CENTER, CENTER)
     textSize(18)
     text("First player to " + str(score_limit) + " points wins", width / 2, height - 40)
-    textSize(30)
+    
+    //Player names
+    let p1_offset = createVector(-Paddle.PADDLE_H_OFFSET/2, Paddle.PADDLE_SIZE.y/2)
+    let p2_offset = createVector(Paddle.PADDLE_H_OFFSET/2 + Paddle.PADDLE_SIZE.x, Paddle.PADDLE_SIZE.y/2)
+    let own_name_pos = (own_p == p1) ? p1.pos.copy().add(p1_offset) : p2.pos.copy().add(p2_offset)
+    let opp_name_pos = (own_p == p1) ? p2.pos.copy().add(p2_offset) : p1.pos.copy().add(p1_offset)
+
+    fill(255)
+    text("You", own_name_pos.x, own_name_pos.y)
+    text("Opp", opp_name_pos.x, opp_name_pos.y)
 }
 
 function draw_start_msg() {
     fill(255)
     textAlign(CENTER, CENTER)
+    textSize(30)
 
     var msg = "Press UP/DOWN or W/S to start"
 
@@ -181,66 +195,35 @@ function draw_start_msg() {
 function draw_waiting_msg() {
     fill(255)
     textAlign(CENTER, CENTER)
+    textSize(30)
 
     var msg = "Waiting for second player..."
 
     text(msg, width / 2, height / 2)
 }
 
-function check_score() {
-    if (b.pos.x <= p1.pos.x) game_status.score_2+=1
-    if (b.pos.x >= p2.pos.x + Paddle.PADDLE_SIZE.x) game_status.score_1+=1
+function up_key_pressed() { return (keyCode == UP_ARROW || key == 'w') }
 
-    return (b.pos.x <= p1.pos.x || b.pos.x >= p2.pos.x + Paddle.PADDLE_SIZE.x)
-}
+function down_key_pressed() { return (keyCode == DOWN_ARROW || key == 's') }
 
-function check_winner() {
-    if (game_status.score_1 >= score_limit) game_status.winner = 1
-    else if (game_status.score_2 >= score_limit) game_status.winner = 2
+function accept_keypress() { return ((up_key_pressed() || down_key_pressed()) && game_status.room_filled) }
 
-    return game_status.winner != 0    
-}
-
-function up_key_pressed() {
-    return (keyCode == UP_ARROW || key == 'w')
-}
-
-function down_key_pressed() {
-    return (keyCode == DOWN_ARROW || key == 's')
-}
-
-function accept_keypress() {
-    return ((up_key_pressed() || down_key_pressed()) && game_status.room_filled)
+function move_paddle(delta) {
+    own_p.set_direction(delta)
+    socket.emit("moved", delta)
 }
 
 function keyPressed() {
     if (accept_keypress()) {
-        game_status.playing = true
-        game_status.winner = 0  
+        game_status.start()
 
         b.set_movable(true)
 
-        if (up_key_pressed()) {
-            own_p.set_direction(-1)
-            socket.emit("moved", -1)
-        }
-
-        if (down_key_pressed()) {
-            own_p.set_direction(1)
-            socket.emit("moved", 1)
-        }
+        if (up_key_pressed()) move_paddle(-1)
+        else if (down_key_pressed()) move_paddle(1)
     }
 }
 
 function keyReleased() {
-    if (accept_keypress()) {
-        own_p.set_direction(0)
-        socket.emit("moved", 0) 
-    }
-}
-
-function sign(val) {
-    if (val == undefined || val == 0) return 0
-
-    return abs(val) / val
+    if (accept_keypress()) move_paddle(0)
 }

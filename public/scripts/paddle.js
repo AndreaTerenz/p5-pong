@@ -68,7 +68,7 @@ class Paddle extends Rectangle {
 
     set_direction(dir) {
         this.can_move = (dir != undefined && dir != 0)
-        this.v_speed = Paddle.VERTICAL_DELTA * sign(dir)
+        this.v_speed = Paddle.VERTICAL_DELTA * Math.sign(dir)
     }
 
     update() {
