@@ -1,12 +1,56 @@
 var p1 = undefined, p2 = undefined
+var own_p = undefined, opp_p = undefined
 var b = undefined
-var score1 = 0, score2 = 0
-var room_filled = false
-var playing = false
 var score_limit = 20 // prompt("Enter score limit: ", 20);
-var winner = 0  
 
+var socket_data
 var socket
+
+var game_status = {
+    winner  : 0,
+    score_1 : 0,
+    score_2 : 0,
+    playing : false,
+    room_filled : false,
+
+    start() {
+        if (this.room_filled) {
+            this.winner = 0,
+            this.playing = true
+        }
+    },
+
+    reset() {
+        this.reset_scores(),
+        this.room_filled = false,
+        this.playing = false
+    },
+
+    reset_scores() {
+        this.score_1 = 0
+        this.score_2 = 0
+        this.winner = 0
+    },
+
+    check_winner() {
+        if (this.score_1 >= score_limit) this.winner = 1
+        else if (this.score_2 >= score_limit) this.winner = 2
+    
+        if (this.winner != 0) this.reset_scores()    
+    },
+
+    check_score(b_pos, p1_pos, p2_pos) {
+        if (b_pos.x <= p1_pos.x) this.score_2+=1
+        if (b_pos.x >= p2_pos.x + Paddle.PADDLE_SIZE.x) this.score_1+=1
+    
+        if (b_pos.x <= p1_pos.x || b_pos.x >= p2_pos.x + Paddle.PADDLE_SIZE.x) {
+            check_winner()
+            return true
+        }
+
+        return false
+    }
+}
 
 function setup() {
     Ball.MAX_VEL_ANGLE = radians(Ball.MAX_VEL_ANGLE)
@@ -14,10 +58,11 @@ function setup() {
     let cnv = createCanvas(1000, 500)
     cnv.parent("sketch_container")
 
+    setup_socket()
+
     p1 = new Paddle(Paddle.PADDLE_H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2);
     p2 = new Paddle((width - Paddle.PADDLE_SIZE.x) - Paddle.PADDLE_H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2);
-    b = new Ball()
-
+    
     textFont("Roboto mono")
     textSize(30)
 
@@ -25,38 +70,56 @@ function setup() {
     drawingContext.shadowOffsetY = 0;
     drawingContext.shadowBlur = 10;
     drawingContext.shadowColor = "black";
-
-    setup_socket()
 }
 
 function setup_socket() {
-    let address = (false) ? "http://95.248.171.171:3000" : "http://localhost:3000"
+    let address = "http://localhost:3500" //(true) ? "http://95.248.171.171:3000" : 
 
     socket = io.connect(address)
 
-    socket.on("connection_data", (data) => { set_selection_info(data) })
+    socket.on("connection_data", (data) => { 
+        socket_data = data
+        set_label("#socket_id", "Player ID: " + socket_data.id)
+        set_label("#opponent_id", "Waiting for other player...")
+        set_label("#room_id", "Room: " + socket_data.room)
+
+        b = new Ball(socket_data.room)
+     })
 
     socket.on("room_filled", (players) => {
-        room_filled = true
         let opp = (players[0] == socket.id) ? players[1] : players[0]
-        let opponent_label = select("#opponent_id")
-        opponent_label.html("Opponent ID: " + opp)
+        own_p = (players[0] == socket.id) ? p1 : p2
+        opp_p = (players[0] == socket.id) ? p2 : p1
+
+        set_label("#opponent_id", "Opponent ID: " + opp)
+        game_status.room_filled = true
     })
 
     socket.on("opp_moved", (delta) => {
-        p2.set_direction(delta)
+        game_status.start()
+        opp_p.set_direction(delta)
         b.set_movable(true)
+    })
+
+    socket.on("opp_left", () => {
+        reset_objects()
+        game_status.reset()
+
+        set_label("#socket_id", "Player ID: " + socket_data.id)
+        set_label("#opponent_id", "Waiting for other player...")
+        set_label("#room_id", "Room: " + socket_data.room)
     })
 }
 
-function set_selection_info(data) {
-    let id_label = select("#socket_id")
-    let opponent_label = select("#opponent_id")
-    let room_label = select("#room_id")
+function reset_objects() {
+    b.reset()
+    p1.reset()
+    p2.reset()
+}
 
-    id_label.html("Player ID: " + data.id)
-    opponent_label.html("Waiting for other player...")
-    room_label.html("Room: " + data.room)
+function set_label(id, txt) {
+    let label = select(id)
+    label.html(txt)
 }
 
 function draw() {
@@ -66,27 +129,17 @@ function draw() {
     rect(0, 0, Paddle.PADDLE_H_OFFSET, height)
     rect(width-Paddle.PADDLE_H_OFFSET, 0, Paddle.PADDLE_H_OFFSET, height)
 
-    if (room_filled)
+    if (game_status.room_filled)
     {
         p1.update()
         p2.update()
 
-        if (playing) {
+        if (game_status.playing) {
             b.update(p1, p2)
 
             draw_ingame_txt()
 
-            if (check_score()) {
-                b.reset()
-                p1.reset()
-                p2.reset()
-
-                if (check_winner()) {
-                    playing = false
-                    score1 = 0
-                    score2 = 0
-                }
-            }
+            if (game_status.check_score(b.pos, p1.pos, p2.pos)) reset_objects()
         }
         else {
             draw_start_msg()
@@ -100,9 +153,9 @@ function draw() {
 function draw_ingame_txt() {
     fill(255, 255, 255, 180)
     textAlign(RIGHT, CENTER)
-    text(str(score1), (width / 2 - Paddle.PADDLE_H_OFFSET) / 2 + Paddle.PADDLE_H_OFFSET, height / 2)
+    text(str(game_status.score_1), (width / 2 - Paddle.PADDLE_H_OFFSET) / 2 + Paddle.PADDLE_H_OFFSET, height / 2)
     textAlign(LEFT, CENTER)
-    text(str(score2), width - ((width / 2 - Paddle.PADDLE_H_OFFSET) / 2 + Paddle.PADDLE_H_OFFSET), height / 2)
+    text(str(game_status.score_2), width - ((width / 2 - Paddle.PADDLE_H_OFFSET) / 2 + Paddle.PADDLE_H_OFFSET), height / 2)
 
     fill(255, 255, 255, 130)
     textAlign(CENTER, CENTER)
@@ -117,7 +170,7 @@ function draw_start_msg() {
 
     var msg = "Press UP/DOWN or W/S to start"
 
-    switch (winner) {
+    switch (game_status.winner) {
         case 1: msg = "Player 1 won!\n" + msg; break;
         case 2: msg = "Player 2 won!\n" + msg; break;
     }
@@ -135,19 +188,17 @@ function draw_waiting_msg() {
 }
 
 function check_score() {
-    if (b.pos.x <= p1.pos.x) score2+=1
-    if (b.pos.x >= p2.pos.x + Paddle.PADDLE_SIZE.x) score1+=1
+    if (b.pos.x <= p1.pos.x) game_status.score_2+=1
+    if (b.pos.x >= p2.pos.x + Paddle.PADDLE_SIZE.x) game_status.score_1+=1
 
     return (b.pos.x <= p1.pos.x || b.pos.x >= p2.pos.x + Paddle.PADDLE_SIZE.x)
 }
 
 function check_winner() {
-    if (score1 >= score_limit)
-        winner = 1
-    else if (score2 >= score_limit)
-        winner = 2
+    if (game_status.score_1 >= score_limit) game_status.winner = 1
+    else if (game_status.score_2 >= score_limit) game_status.winner = 2
 
-    return winner != 0    
+    return game_status.winner != 0    
 }
 
 function up_key_pressed() {
@@ -159,23 +210,23 @@ function down_key_pressed() {
 }
 
 function accept_keypress() {
-    return ((up_key_pressed() || down_key_pressed()) && room_filled)
+    return ((up_key_pressed() || down_key_pressed()) && game_status.room_filled)
 }
 
 function keyPressed() {
     if (accept_keypress()) {
-        playing = true
-        winner = 0  
+        game_status.playing = true
+        game_status.winner = 0  
 
         b.set_movable(true)
 
         if (up_key_pressed()) {
-            p1.set_direction(-1)
+            own_p.set_direction(-1)
             socket.emit("moved", -1)
         }
 
         if (down_key_pressed()) {
-            p1.set_direction(1)
+            own_p.set_direction(1)
             socket.emit("moved", 1)
         }
     }
@@ -183,7 +234,7 @@ function keyPressed() {
 
 function keyReleased() {
     if (accept_keypress()) {
-        p1.set_direction(0)
+        own_p.set_direction(0)
         socket.emit("moved", 0) 
     }
 }

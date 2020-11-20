@@ -28,6 +28,9 @@ io.on("connect", (socket) => {
 
     if (get_room_size(socket_room) >= 2) {
         console.log("Two clients have joined room [" + socket_room + "]")
+
+        
+
         io.to(socket_room).emit("room_filled", Array.from(io.sockets.adapter.rooms.get(socket_room)))
 
         if (rooms_set.size == 0) {
@@ -42,6 +45,12 @@ io.on("connect", (socket) => {
     socket.on('disconnect', () => {
         console.log("Client " + socket.id + " disconnected");
 
+        if (get_room_size(socket_room) < 1) {
+            console.log("Room " + socket_room + " has emptied");
+        } else {
+            socket.to(socket_room).emit("opp_left")
+        }
+        
         rooms_set.add(socket_room)
     });
 
