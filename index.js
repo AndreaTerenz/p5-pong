@@ -29,8 +29,6 @@ io.on("connect", (socket) => {
     if (get_room_size(socket_room) >= 2) {
         console.log("Two clients have joined room [" + socket_room + "]")
 
-        
-
         io.to(socket_room).emit("room_filled", Array.from(io.sockets.adapter.rooms.get(socket_room)))
 
         if (rooms_set.size == 0) {

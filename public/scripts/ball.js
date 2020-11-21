@@ -5,20 +5,23 @@ class Ball {
     static MAX_VEL_ANGLE = 60
 
     constructor(seed) {
-        this.rand = new Math.seedrandom(seed)
-        this.pos = new p5.Vector(width/2, height/2)
-        this.speed = this.get_random_speed()
-        this.can_update = false
+        this.reset(seed)
     }
     
     set_movable(m) {
         this.can_update = m
     }
     
-    reset() {
+    reset(seed) {
+        if (seed) this.reset_rand(seed)
         this.pos = new p5.Vector(width/2, height/2)
         this.speed = this.get_random_speed()
         this.can_update = false
+    }
+
+    reset_rand(seed) {
+        this.last_seed = seed
+        this.rand = new Math.seedrandom(seed)
     }
 
     update(p1, p2) {

@@ -3,8 +3,12 @@ var own_p = undefined, opp_p = undefined
 var b = undefined
 var score_limit = 20 // prompt("Enter score limit: ", 20);
 
-var socket_data
 var socket
+var connection_data = {
+    id : "",
+    room : "",
+    opp_id : ""
+}
 
 var game_status = {
     winner  : 0,
@@ -60,8 +64,8 @@ function setup() {
 
     setup_socket()
 
-    p1 = new Paddle(Paddle.PADDLE_H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2);
-    p2 = new Paddle((width - Paddle.PADDLE_SIZE.x) - Paddle.PADDLE_H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2);
+    p1 = new Paddle(Paddle.PADDLE_H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2, "L");
+    p2 = new Paddle((width - Paddle.PADDLE_SIZE.x) - Paddle.PADDLE_H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2, "R");
     
     textFont("Roboto mono")
     textSize(30)
@@ -78,37 +82,46 @@ function setup_socket() {
     socket = io.connect(address)
 
     socket.on("connection_data", (data) => { 
-        socket_data = data
-        set_label("#socket_id", "Player ID: " + socket_data.id)
+        connection_data.id = data.id
+        connection_data.room = data.room
+        set_label("#socket_id", "Player ID: " + connection_data.id)
         set_label("#opponent_id", "Waiting for other player...")
-        set_label("#room_id", "Room: " + socket_data.room)
-
-        b = new Ball(socket_data.room)
+        set_label("#room_id", "Room: " + connection_data.room)
      })
 
     socket.on("room_filled", (players) => {
-        let opp = (players[0] == socket.id) ? players[1] : players[0]
+        game_status.room_filled = true
+        connection_data.opp_id = (players[0] == socket.id) ? players[1] : players[0]
         own_p = (players[0] == socket.id) ? p1 : p2
         opp_p = (players[0] == socket.id) ? p2 : p1
 
-        set_label("#opponent_id", "Opponent ID: " + opp)
-        game_status.room_filled = true
+        let seed = connection_data.room + players[0] + players[1]
+        if (b) b.reset(seed)
+        else b = new Ball(seed)
+
+        own_p.label = "You"
+        opp_p.label = "Opp"
+
+        set_label("#opponent_id", "Opponent ID: " + connection_data.opp_id)
     })
 
     socket.on("opp_moved", (delta) => {
-        game_status.start()
-        b.set_movable(true)
+        if (delta) {
+            game_status.start()
+            b.set_movable(true)
+        }
         
         opp_p.set_direction(delta)
     })
 
     socket.on("opp_left", () => {
+        connection_data.opp_id = ""
         reset_objects()
         game_status.reset()
 
-        set_label("#socket_id", "Player ID: " + socket_data.id)
+        set_label("#socket_id", "Player ID: " + connection_data.id)
         set_label("#opponent_id", "Waiting for other player...")
-        set_label("#room_id", "Room: " + socket_data.room)
+        set_label("#room_id", "Room: " + connection_data.room)
     })
 }
 
@@ -165,16 +178,6 @@ function draw_ingame_txt() {
     textAlign(CENTER, CENTER)
     textSize(18)
     text("First player to " + str(score_limit) + " points wins", width / 2, height - 40)
-    
-    //Player names
-    let p1_offset = createVector(-Paddle.PADDLE_H_OFFSET/2, Paddle.PADDLE_SIZE.y/2)
-    let p2_offset = createVector(Paddle.PADDLE_H_OFFSET/2 + Paddle.PADDLE_SIZE.x, Paddle.PADDLE_SIZE.y/2)
-    let own_name_pos = (own_p == p1) ? p1.pos.copy().add(p1_offset) : p2.pos.copy().add(p2_offset)
-    let opp_name_pos = (own_p == p1) ? p2.pos.copy().add(p2_offset) : p1.pos.copy().add(p1_offset)
-
-    fill(255)
-    text("You", own_name_pos.x, own_name_pos.y)
-    text("Opp", opp_name_pos.x, opp_name_pos.y)
 }
 
 function draw_start_msg() {
@@ -202,11 +205,11 @@ function draw_waiting_msg() {
     text(msg, width / 2, height / 2)
 }
 
-function up_key_pressed() { return (keyCode == UP_ARROW || key == 'w') }
+function up_key() { return (keyCode == UP_ARROW || key == 'w') }
 
-function down_key_pressed() { return (keyCode == DOWN_ARROW || key == 's') }
+function down_key() { return (keyCode == DOWN_ARROW || key == 's') }
 
-function accept_keypress() { return ((up_key_pressed() || down_key_pressed()) && game_status.room_filled) }
+function accept_keypress() { return ((up_key() || down_key()) && game_status.room_filled) }
 
 function move_paddle(delta) {
     own_p.set_direction(delta)
@@ -216,11 +219,10 @@ function move_paddle(delta) {
 function keyPressed() {
     if (accept_keypress()) {
         game_status.start()
-
         b.set_movable(true)
 
-        if (up_key_pressed()) move_paddle(-1)
-        else if (down_key_pressed()) move_paddle(1)
+        if (up_key()) move_paddle(-1)
+        else if (down_key()) move_paddle(1)
     }
 }
 
