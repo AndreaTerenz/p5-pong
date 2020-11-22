@@ -4,24 +4,24 @@ class Ball {
     static BALL_RADIUS = 7
     static MAX_VEL_ANGLE = 60
 
-    constructor() {
-        this.pos = new p5.Vector(width/2, height/2)
-        this.speed = this.get_random_speed()
-        this.can_update = false
-        this.gianfranco = false
+    constructor(seed) {
+        this.reset(seed)
     }
     
     set_movable(m) {
         this.can_update = m
     }
     
-    reset() {
+    reset(seed) {
+        if (seed) this.reset_rand(seed)
         this.pos = new p5.Vector(width/2, height/2)
         this.speed = this.get_random_speed()
         this.can_update = false
-        this.gianfranco = false
+    }
 
-
+    reset_rand(seed) {
+        this.last_seed = seed
+        this.rand = new Math.seedrandom(seed)
     }
 
     update(p1, p2) {
@@ -81,9 +81,10 @@ class Ball {
     }
 
     get_random_speed() {
-        var angle_tan = random(tan(-Ball.MAX_VEL_ANGLE), tan(Ball.MAX_VEL_ANGLE))
+        var angle_tan = map(this.rand.quick(), 0, 1, tan(-Ball.MAX_VEL_ANGLE), tan(Ball.MAX_VEL_ANGLE))
+        var angle_choice = round(this.rand.quick())
         var angle = atan(angle_tan)
 
-        return p5.Vector.fromAngle(angle + PI*random([0, 1]))
+        return p5.Vector.fromAngle(angle + PI*angle_choice)
     }
 }

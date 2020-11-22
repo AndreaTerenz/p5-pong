@@ -7,6 +7,12 @@ html {
     font-family: 'Roboto Mono', monospace;
 }
 
+#socket_data {
+    margin: auto;
+    text-align: center;
+    line-height: 20%;
+}
+
 h1 {
     margin: auto;
     text-align: center;
@@ -14,13 +20,13 @@ h1 {
     font-weight: bold;
 }
 
-hr, h1 {
-    color: aliceblue;
-}
-
 hr {
     margin-bottom: 20px;
     border: 5px solid aliceblue;;
+}
+
+hr, h1, #socket_data {
+    color: aliceblue;
 }
 
 canvas {

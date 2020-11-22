@@ -1,12 +1,50 @@
-class Rectangle {
-    constructor (x, y, s) {
-        this.pos = new p5.Vector(x, y)
-        this.size = s
+class Paddle {
+
+    static PADDLE_SIZE = new p5.Vector(20, 120)
+    static PADDLE_H_OFFSET = 105
+    static VERTICAL_DELTA = 7
+
+    constructor (x, y, side, label = "") {
+        this.init_pos = createVector(x, y)
+        this.size = Paddle.PADDLE_SIZE
+        this.label = label
+        this.side = side
+        
+        this.reset()
+    }
+
+    set_direction(dir) {
+        this.can_move = (dir != undefined && dir != 0)
+        this.v_speed = Paddle.VERTICAL_DELTA * Math.sign(dir)
+    }
+
+    update() {
+        if (this.can_move){
+            this.pos.y = constrain(this.pos.y + this.v_speed, 0, height - Paddle.PADDLE_SIZE.y)
+        }
+
+        this.draw()
+    }
+
+    reset() {
+        this.pos = this.init_pos.copy()
+        this.v_speed = 0
+        this.can_move = false
     }
 
     draw() {
         fill(255)
         rect(this.pos.x, this.pos.y, this.size.x, this.size.y)
+
+        let offset = undefined
+        if (this.side == "L") offset = createVector(-Paddle.PADDLE_H_OFFSET/2, Paddle.PADDLE_SIZE.y/2)
+        else offset = createVector(Paddle.PADDLE_H_OFFSET/2 + Paddle.PADDLE_SIZE.x, Paddle.PADDLE_SIZE.y/2)
+        
+        let txt_pos = p5.Vector.add(this.pos, offset)
+
+        textAlign(CENTER, CENTER)
+        textSize(18)
+        text(this.label, txt_pos.x, txt_pos.y)
     }
     
     contains(p) {
@@ -49,41 +87,5 @@ class Rectangle {
         }
 
         return output
-    }
-}
-
-class Paddle extends Rectangle {
-
-    static PADDLE_SIZE = new p5.Vector(20, 120)
-    static PADDLE_H_OFFSET = 105
-    static VERTICAL_DELTA = 7
-
-    constructor (x, y) {
-        super(x, y, Paddle.PADDLE_SIZE)
-
-        this.init_pos = createVector(x, y)
-        this.v_speed = 0
-        this.can_move = false
-    }
-
-    set_direction(dir) {
-        this.can_move = (dir != undefined && dir != 0)
-        this.v_speed = Paddle.VERTICAL_DELTA * sign(dir)
-    }
-
-    update() {
-        if (this.can_move) this.move(this.v_speed)
-
-        this.draw()
-    }
-
-    reset() {
-        this.pos = this.init_pos.copy()
-        this.v_speed = 0
-        this.can_move = false
-    }
-
-    move(delta) {
-        this.pos.y = constrain(this.pos.y + delta, 0, height - Paddle.PADDLE_SIZE.y)
     }
 }
