@@ -40,6 +40,11 @@ io.on("connect", (socket) => {
         rooms_set.delete(next_room)
     }
 
+    socket.on("scored", (score) => {
+        console.log("Client " + socket.id + " scored");
+        socket.to(socket_room).emit("opp_scored", score)
+    })
+
     socket.on('disconnect', () => {
         console.log("Client " + socket.id + " disconnected");
 
@@ -53,7 +58,7 @@ io.on("connect", (socket) => {
     });
 
     socket.on('moved', (delta) => {
-        console.log("Client " + socket.id + " moved by :" + delta);
+        //console.log("Client " + socket.id + " moved by :" + delta);
         socket.to(socket_room).emit("opp_moved", delta)
     })
 })

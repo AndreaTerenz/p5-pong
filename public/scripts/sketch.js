@@ -1,7 +1,7 @@
 var p1 = undefined, p2 = undefined
 var own_p = undefined, opp_p = undefined
 var b = undefined
-var score_limit = 20 // prompt("Enter score limit: ", 20);
+var score_limit = 2 // prompt("Enter score limit: ", 20);
 
 var socket
 var connection_data = {
@@ -12,8 +12,8 @@ var connection_data = {
 
 var game_status = {
     winner  : 0,
-    score_1 : 0,
-    score_2 : 0,
+    score_1 : 0, //LEFT score
+    score_2 : 0, //RIGHT score
     playing : false,
     room_filled : false,
 
@@ -40,19 +40,20 @@ var game_status = {
         if (this.score_1 >= score_limit) this.winner = 1
         else if (this.score_2 >= score_limit) this.winner = 2
     
-        if (this.winner != 0) this.reset_scores()    
+        return (this.winner != 0)
     },
 
     check_score(b_pos, p1_pos, p2_pos) {
-        if (b_pos.x <= p1_pos.x) this.score_2+=1
-        if (b_pos.x >= p2_pos.x + Paddle.PADDLE_SIZE.x) this.score_1+=1
-    
-        if (b_pos.x <= p1_pos.x || b_pos.x >= p2_pos.x + Paddle.PADDLE_SIZE.x) {
-            this.check_winner()
-            return true
+        if (b_pos.x <= p1_pos.x) {
+            this.score_2+=1
+            return 2
         }
-
-        return false
+        if (b_pos.x >= p2_pos.x + Paddle.PADDLE_SIZE.x) {
+            this.score_1+=1
+            return 1
+        }
+    
+        return 0
     }
 }
 
@@ -105,6 +106,13 @@ function setup_socket() {
         set_label("#opponent_id", "Opponent ID: " + connection_data.opp_id)
     })
 
+    socket.on("opp_scored", (score) => {
+        game_status.score_1 = score.l_score
+        game_status.score_2 = score.r_score
+
+        handle_score()
+    })
+
     socket.on("opp_moved", (delta) => {
         if (delta) {
             game_status.start()
@@ -153,7 +161,15 @@ function draw() {
 
             draw_ingame_txt()
 
-            if (game_status.check_score(b.pos, p1.pos, p2.pos)) reset_objects()
+            let scored = game_status.check_score(b.pos, p1.pos, p2.pos)
+            if (scored) {
+                handle_score()
+
+                socket.emit("scored", {
+                    l_score : game_status.score_1,
+                    r_score : game_status.score_2
+                })
+            }
         }
         else {
             draw_start_msg()
@@ -162,6 +178,14 @@ function draw() {
     else {
         draw_waiting_msg()
     }
+}
+
+function handle_score() {
+    console.log("Score: " + game_status.score_1 + " | " + game_status.score_2);
+    reset_objects()
+
+    if (game_status.check_winner())
+        game_status.reset_scores()
 }
 
 function draw_ingame_txt() {

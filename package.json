@@ -23,6 +23,7 @@
   "homepage": "https://github.com/AndreaTerenz/p5-pong#readme",
   "dependencies": {
     "express": "^4.17.1",
+    "seedrandom": "^3.0.5",
     "socket.io": "^3.0.2"
   }
 }
