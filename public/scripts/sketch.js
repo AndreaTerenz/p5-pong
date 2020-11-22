@@ -1,7 +1,7 @@
 var p1 = undefined, p2 = undefined
 var own_p = undefined, opp_p = undefined
 var b = undefined
-var score_limit = 2 // prompt("Enter score limit: ", 20);
+var score_limit = 20 // prompt("Enter score limit: ", 20);
 
 var socket
 var connection_data = {
