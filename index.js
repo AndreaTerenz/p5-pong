@@ -45,6 +45,11 @@ io.on("connect", (socket) => {
         socket.to(socket_room).emit("opp_scored", score)
     })
 
+    socket.on("won", (id) => {
+        console.log("Client " + id + " won");
+        socket.to(socket_room).emit("opp_won", id)
+    })
+
     socket.on('disconnect', () => {
         console.log("Client " + socket.id + " disconnected");
 

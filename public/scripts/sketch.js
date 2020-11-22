@@ -18,22 +18,22 @@ var game_status = {
     room_filled : false,
 
     start() {
-        if (this.room_filled) {
+        if (this.room_filled && !this.playing) {
+            this.reset_scores()
             this.winner = 0
             this.playing = true
         }
     },
 
-    reset() {
+    reset(room_still_filled = true) {
         this.reset_scores()
-        this.room_filled = false
+        this.room_filled = room_still_filled
         this.playing = false
     },
 
     reset_scores() {
         this.score_1 = 0
         this.score_2 = 0
-        this.winner = 0
     },
 
     check_winner() {
@@ -113,6 +113,11 @@ function setup_socket() {
         handle_score()
     })
 
+    socket.on("opp_won", (id) => {
+        if (connection_data.id != id && game_status.playing)
+            game_status.reset()
+    })
+
     socket.on("opp_moved", (delta) => {
         if (delta) {
             game_status.start()
@@ -125,7 +130,7 @@ function setup_socket() {
     socket.on("opp_left", () => {
         connection_data.opp_id = ""
         reset_objects()
-        game_status.reset()
+        game_status.reset(false)
 
         set_label("#socket_id", "Player ID: " + connection_data.id)
         set_label("#opponent_id", "Waiting for other player...")
@@ -169,6 +174,12 @@ function draw() {
                     l_score : game_status.score_1,
                     r_score : game_status.score_2
                 })
+
+                if (game_status.check_winner()) {
+                    game_status.reset()
+            
+                    socket.emit("won", connection_data.id)
+                }
             }
         }
         else {
@@ -178,55 +189,54 @@ function draw() {
     else {
         draw_waiting_msg()
     }
+
+    function draw_ingame_txt() {
+        //Score
+        let pos = createVector((width / 2 - Paddle.PADDLE_H_OFFSET) / 2 + Paddle.PADDLE_H_OFFSET, height / 2)
+    
+        fill(255, 255, 255, 180)
+        textAlign(RIGHT, CENTER)
+        textSize(30)
+        text(str(game_status.score_1), pos.x, pos.y)
+        textAlign(LEFT, CENTER)
+        text(str(game_status.score_2), width - pos.x, pos.y)
+    
+        //Score limit msg
+        fill(255, 255, 255, 130)
+        textAlign(CENTER, CENTER)
+        textSize(18)
+        text("First player to " + str(score_limit) + " points wins", width / 2, height - 40)
+    }
+    
+    function draw_start_msg() {
+        fill(255)
+        textAlign(CENTER, CENTER)
+        textSize(30)
+    
+        var msg = "Press UP/DOWN or W/S to start"
+    
+        switch (game_status.winner) {
+            case 1: msg = "Player 1 won!\n" + msg; break;
+            case 2: msg = "Player 2 won!\n" + msg; break;
+        }
+    
+        text(msg, width / 2, height / 2)
+    }
+    
+    function draw_waiting_msg() {
+        fill(255)
+        textAlign(CENTER, CENTER)
+        textSize(30)
+    
+        var msg = "Waiting for second player..."
+    
+        text(msg, width / 2, height / 2)
+    }
 }
 
 function handle_score() {
     console.log("Score: " + game_status.score_1 + " | " + game_status.score_2);
     reset_objects()
-
-    if (game_status.check_winner())
-        game_status.reset_scores()
-}
-
-function draw_ingame_txt() {
-    //Score
-    fill(255, 255, 255, 180)
-    textAlign(RIGHT, CENTER)
-    textSize(30)
-    text(str(game_status.score_1), (width / 2 - Paddle.PADDLE_H_OFFSET) / 2 + Paddle.PADDLE_H_OFFSET, height / 2)
-    textAlign(LEFT, CENTER)
-    text(str(game_status.score_2), width - ((width / 2 - Paddle.PADDLE_H_OFFSET) / 2 + Paddle.PADDLE_H_OFFSET), height / 2)
-
-    //Score limit msg
-    fill(255, 255, 255, 130)
-    textAlign(CENTER, CENTER)
-    textSize(18)
-    text("First player to " + str(score_limit) + " points wins", width / 2, height - 40)
-}
-
-function draw_start_msg() {
-    fill(255)
-    textAlign(CENTER, CENTER)
-    textSize(30)
-
-    var msg = "Press UP/DOWN or W/S to start"
-
-    switch (game_status.winner) {
-        case 1: msg = "Player 1 won!\n" + msg; break;
-        case 2: msg = "Player 2 won!\n" + msg; break;
-    }
-
-    text(msg, width / 2, height / 2)
-}
-
-function draw_waiting_msg() {
-    fill(255)
-    textAlign(CENTER, CENTER)
-    textSize(30)
-
-    var msg = "Waiting for second player..."
-
-    text(msg, width / 2, height / 2)
 }
 
 function up_key() { return (keyCode == UP_ARROW || key == 'w') }
