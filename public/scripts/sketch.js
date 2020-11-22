@@ -70,15 +70,15 @@ function setup() {
     
     textFont("Roboto mono")
     textSize(30)
-
+/*
     drawingContext.shadowOffsetX = 0;
     drawingContext.shadowOffsetY = 0;
-    drawingContext.shadowBlur = 10;
-    drawingContext.shadowColor = "black";
+    drawingContext.shadowBlur = 8;
+    drawingContext.shadowColor = "black";*/
 }
 
 function setup_socket() {
-    let address = "http://localhost:3500" //(true) ? "http://95.248.171.171:3000" : 
+    let address = "http://95.248.171.171:3000" //"http://localhost:3500"
 
     socket = io.connect(address)
 
@@ -152,8 +152,13 @@ function set_label(id, txt) {
 function draw() {
     background(0)
 
-    fill(100)
+    let colors = [color(56, 142, 60), color(211, 47, 47)]
+    let l_col = (own_p == p1) ? colors[0] : colors[1]
+    let r_col = (own_p == p1) ? colors[1] : colors[0]
+
+    fill(l_col)
     rect(0, 0, Paddle.PADDLE_H_OFFSET, height)
+    fill(r_col)
     rect(width-Paddle.PADDLE_H_OFFSET, 0, Paddle.PADDLE_H_OFFSET, height)
 
     if (game_status.room_filled)
@@ -182,13 +187,9 @@ function draw() {
                 }
             }
         }
-        else {
-            draw_start_msg()
-        }
+        else draw_start_msg()
     }
-    else {
-        draw_waiting_msg()
-    }
+    else draw_waiting_msg()
 
     function draw_ingame_txt() {
         //Score

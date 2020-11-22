@@ -43,7 +43,7 @@ class Paddle {
         let txt_pos = p5.Vector.add(this.pos, offset)
 
         textAlign(CENTER, CENTER)
-        textSize(18)
+        textSize(24)
         text(this.label, txt_pos.x, txt_pos.y)
     }
     

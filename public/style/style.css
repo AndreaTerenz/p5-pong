@@ -1,9 +1,14 @@
+@font-face {
+    font-family: Roboto;
+    src: url(sansation_bold.woff);
+    font-weight: bold;
+}
+
 html {
     margin: 10;
     padding: 0;
     background-color: rgb(48, 74, 187);
 
-    font-family: 'Goldman', cursive;
     font-family: 'Roboto Mono', monospace;
 }
 
