@@ -78,7 +78,7 @@ function setup() {
 }
 
 function setup_socket() {
-    let address = "http://95.248.171.171:3000" //"http://localhost:3500"
+    let address = "http://localhost:3500"
 
     socket = io.connect(address)
 
