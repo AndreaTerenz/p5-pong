@@ -1,3 +1,5 @@
+p5.disableFriendlyErrors = true; // disables FES
+
 var p1 = undefined, p2 = undefined
 var own_p = undefined, opp_p = undefined
 var b = undefined
@@ -10,64 +12,21 @@ var connection_data = {
     opp_id : ""
 }
 
-var game_status = {
-    winner  : 0,
-    score_1 : 0, //LEFT score
-    score_2 : 0, //RIGHT score
-    playing : false,
-    room_filled : false,
-
-    start() {
-        if (this.room_filled && !this.playing) {
-            this.reset_scores()
-            this.winner = 0
-            this.playing = true
-        }
-    },
-
-    reset(room_still_filled = true) {
-        this.reset_scores()
-        this.room_filled = room_still_filled
-        this.playing = false
-    },
-
-    reset_scores() {
-        this.score_1 = 0
-        this.score_2 = 0
-    },
-
-    check_winner() {
-        if (this.score_1 >= score_limit) this.winner = 1
-        else if (this.score_2 >= score_limit) this.winner = 2
-    
-        return (this.winner != 0)
-    },
-
-    check_score(b_pos, p1_pos, p2_pos) {
-        if (b_pos.x <= p1_pos.x) {
-            this.score_2+=1
-            return 2
-        }
-        if (b_pos.x >= p2_pos.x + Paddle.PADDLE_SIZE.x) {
-            this.score_1+=1
-            return 1
-        }
-    
-        return 0
-    }
-}
+var labels = undefined
 
 function setup() {
-    Ball.MAX_VEL_ANGLE = radians(Ball.MAX_VEL_ANGLE)
-
-    let cnv = createCanvas(1000, 500)
-    cnv.parent("sketch_container")
+    createCanvas(1000, 500).parent("sketch_container")
 
     setup_socket()
 
     p1 = new Paddle(Paddle.PADDLE_H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2, "L");
     p2 = new Paddle((width - Paddle.PADDLE_SIZE.x) - Paddle.PADDLE_H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2, "R");
-    
+    labels = {
+        player_id : select("#socket_id"),
+        opp_id : select("#opponent_id"),
+        room : select("#room_id")
+    }
+
     textFont("Roboto mono")
     textSize(30)
 /*
@@ -85,9 +44,9 @@ function setup_socket() {
     socket.on("connection_data", (data) => { 
         connection_data.id = data.id
         connection_data.room = data.room
-        set_label("#socket_id", "Player ID: " + connection_data.id)
-        set_label("#opponent_id", "Waiting for other player...")
-        set_label("#room_id", "Room: " + connection_data.room)
+        labels.player_id.html("Player ID: " + connection_data.id)
+        labels.opp_id.html("Waiting for other player...")
+        labels.room.html("Room: " + connection_data.room)
      })
 
     socket.on("room_filled", (players) => {
@@ -103,7 +62,7 @@ function setup_socket() {
         own_p.label = "You"
         opp_p.label = "Opp"
 
-        set_label("#opponent_id", "Opponent ID: " + connection_data.opp_id)
+        labels.opp_id.html("Opponent ID: " + connection_data.opp_id)
     })
 
     socket.on("opp_scored", (score) => {
@@ -132,9 +91,7 @@ function setup_socket() {
         reset_objects()
         game_status.reset(false)
 
-        set_label("#socket_id", "Player ID: " + connection_data.id)
-        set_label("#opponent_id", "Waiting for other player...")
-        set_label("#room_id", "Room: " + connection_data.room)
+        labels.opp_id.html("Waiting for other player...")
     })
 }
 
@@ -142,11 +99,6 @@ function reset_objects() {
     b.reset()
     p1.reset()
     p2.reset()
-}
-
-function set_label(id, txt) {
-    let label = select(id)
-    label.html(txt)
 }
 
 function draw() {

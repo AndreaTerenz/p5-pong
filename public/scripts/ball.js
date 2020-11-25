@@ -2,7 +2,7 @@ class Ball {
     
     static MAX_VEL = 8
     static BALL_RADIUS = 7
-    static MAX_VEL_ANGLE = 60
+    static MAX_VEL_ANGLE = Math.PI/3
 
     constructor(seed) {
         this.reset(seed)
@@ -81,10 +81,10 @@ class Ball {
     }
 
     get_random_speed() {
-        var angle_tan = map(this.rand.quick(), 0, 1, tan(-Ball.MAX_VEL_ANGLE), tan(Ball.MAX_VEL_ANGLE))
-        var angle_choice = round(this.rand.quick())
-        var angle = atan(angle_tan)
+        var angle_tan = map(this.rand.quick(), 0, 1, Math.tan(-Ball.MAX_VEL_ANGLE), Math.tan(Ball.MAX_VEL_ANGLE))
+        var angle_choice = Math.round(this.rand.quick())
+        var angle = Math.atan(angle_tan)
 
-        return p5.Vector.fromAngle(angle + PI*angle_choice)
+        return p5.Vector.fromAngle(angle + Math.PI*angle_choice)
     }
 }

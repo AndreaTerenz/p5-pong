@@ -2,9 +2,11 @@
   "name": "pong",
   "version": "0.0.1",
   "description": "Simple pong clone made with p5.js and sockets.io",
-  "main": "index.js",
+  "main": "bin/app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node bin/app.js",
+    "devstart": "clear; nodemon bin/app.js",
+    "serverstart": "DEBUG=express-locallibrary-tutorial:* npm run devstart"
   },
   "repository": {
     "type": "git",
@@ -25,5 +27,9 @@
     "express": "^4.17.1",
     "seedrandom": "^3.0.5",
     "socket.io": "^3.0.2"
+  },
+  "devDependencies": {
+    "morgan": "^1.10.0",
+    "nodemon": "^2.0.6"
   }
 }
