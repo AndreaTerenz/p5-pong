@@ -1,10 +1,10 @@
 p5.disableFriendlyErrors = true; // disables FES
 
-var p1 = undefined, p2 = undefined
-var own_p = undefined, opp_p = undefined
-var b = undefined
+var p1, p2
+var own_p, opp_p
+var b
 var score_limit = 20 // prompt("Enter score limit: ", 20);
-
+var game_stat
 var socket
 var connection_data = {
     id : "",
@@ -12,7 +12,7 @@ var connection_data = {
     opp_id : ""
 }
 
-var labels = undefined
+var labels
 
 function setup() {
     createCanvas(1000, 500).parent("sketch_container")
@@ -21,6 +21,8 @@ function setup() {
 
     p1 = new Paddle(Paddle.PADDLE_H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2, "L");
     p2 = new Paddle((width - Paddle.PADDLE_SIZE.x) - Paddle.PADDLE_H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2, "R");
+    
+    game_stat = new GameStatus()
     labels = {
         player_id : select("#socket_id"),
         opp_id : select("#opponent_id"),
@@ -29,11 +31,6 @@ function setup() {
 
     textFont("Roboto mono")
     textSize(30)
-/*
-    drawingContext.shadowOffsetX = 0;
-    drawingContext.shadowOffsetY = 0;
-    drawingContext.shadowBlur = 8;
-    drawingContext.shadowColor = "black";*/
 }
 
 function setup_socket() {
@@ -50,7 +47,7 @@ function setup_socket() {
      })
 
     socket.on("room_filled", (players) => {
-        game_status.room_filled = true
+        game_stat.room_filled = true
         connection_data.opp_id = (players[0] == socket.id) ? players[1] : players[0]
         own_p = (players[0] == socket.id) ? p1 : p2
         opp_p = (players[0] == socket.id) ? p2 : p1
@@ -66,20 +63,20 @@ function setup_socket() {
     })
 
     socket.on("opp_scored", (score) => {
-        game_status.score_1 = score.l_score
-        game_status.score_2 = score.r_score
+        game_stat.score_1 = score.l_score
+        game_stat.score_2 = score.r_score
 
         handle_score()
     })
 
     socket.on("opp_won", (id) => {
-        if (connection_data.id != id && game_status.playing)
-            game_status.reset()
+        if (connection_data.id != id && game_stat.playing)
+            game_stat.reset()
     })
 
     socket.on("opp_moved", (delta) => {
         if (delta) {
-            game_status.start()
+            game_stat.start()
             b.set_movable(true)
         }
         
@@ -89,7 +86,7 @@ function setup_socket() {
     socket.on("opp_left", () => {
         connection_data.opp_id = ""
         reset_objects()
-        game_status.reset(false)
+        game_stat.reset(false)
 
         labels.opp_id.html("Waiting for other player...")
     })
@@ -113,27 +110,27 @@ function draw() {
     fill(r_col)
     rect(width-Paddle.PADDLE_H_OFFSET, 0, Paddle.PADDLE_H_OFFSET, height)
 
-    if (game_status.room_filled)
+    if (game_stat.room_filled)
     {
         p1.update()
         p2.update()
 
-        if (game_status.playing) {
+        if (game_stat.playing) {
             b.update(p1, p2)
 
             draw_ingame_txt()
 
-            let scored = game_status.check_score(b.pos, p1.pos, p2.pos)
+            let scored = game_stat.check_score(b.pos.x, p1.pos.x, p2.pos.x)
             if (scored) {
                 handle_score()
 
                 socket.emit("scored", {
-                    l_score : game_status.score_1,
-                    r_score : game_status.score_2
+                    l_score : game_stat.score_1,
+                    r_score : game_stat.score_2
                 })
 
-                if (game_status.check_winner()) {
-                    game_status.reset()
+                if (game_stat.check_winner()) {
+                    game_stat.reset()
             
                     socket.emit("won", connection_data.id)
                 }
@@ -150,9 +147,9 @@ function draw() {
         fill(255, 255, 255, 180)
         textAlign(RIGHT, CENTER)
         textSize(30)
-        text(str(game_status.score_1), pos.x, pos.y)
+        text(str(game_stat.score_1), pos.x, pos.y)
         textAlign(LEFT, CENTER)
-        text(str(game_status.score_2), width - pos.x, pos.y)
+        text(str(game_stat.score_2), width - pos.x, pos.y)
     
         //Score limit msg
         fill(255, 255, 255, 130)
@@ -168,7 +165,7 @@ function draw() {
     
         var msg = "Press UP/DOWN or W/S to start"
     
-        switch (game_status.winner) {
+        switch (game_stat.winner) {
             case 1: msg = "Player 1 won!\n" + msg; break;
             case 2: msg = "Player 2 won!\n" + msg; break;
         }
@@ -188,7 +185,7 @@ function draw() {
 }
 
 function handle_score() {
-    console.log("Score: " + game_status.score_1 + " | " + game_status.score_2);
+    console.log("Score: " + game_stat.score_1 + " | " + game_stat.score_2);
     reset_objects()
 }
 
@@ -196,7 +193,7 @@ function up_key() { return (keyCode == UP_ARROW || key == 'w') }
 
 function down_key() { return (keyCode == DOWN_ARROW || key == 's') }
 
-function accept_keypress() { return ((up_key() || down_key()) && game_status.room_filled) }
+function accept_keypress() { return ((up_key() || down_key()) && game_stat.room_filled) }
 
 function move_paddle(delta) {
     own_p.set_direction(delta)
@@ -205,7 +202,7 @@ function move_paddle(delta) {
 
 function keyPressed() {
     if (accept_keypress()) {
-        game_status.start()
+        game_stat.start()
         b.set_movable(true)
 
         if (up_key()) move_paddle(-1)

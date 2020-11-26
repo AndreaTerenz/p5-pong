@@ -1,6 +1,5 @@
 var express = require("express")
 var logger = require('morgan')
-var http = require('http')
 
 var app = express()
 
