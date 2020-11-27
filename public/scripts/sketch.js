@@ -13,9 +13,11 @@ var connection_data = {
 }
 
 var labels
+var show_canvas = true
 
 function setup() {
-    createCanvas(1000, 500).parent("sketch_container")
+    createCanvas(1000, 500).parent("#sketch_container")
+    toggleCanvas();
 
     setup_socket()
 
@@ -33,6 +35,14 @@ function setup() {
     textSize(30)
 }
 
+function toggleCanvas() {
+    show_canvas = !show_canvas
+    if (show_canvas)
+        select("#sketch_container").show()
+    else
+        select("#sketch_container").hide()
+}
+
 function setup_socket() {
     let address = "http://localhost:3500"
 
@@ -47,6 +57,7 @@ function setup_socket() {
      })
 
     socket.on("room_filled", (players) => {
+        toggleCanvas();
         game_stat.room_filled = true
         connection_data.opp_id = (players[0] == socket.id) ? players[1] : players[0]
         own_p = (players[0] == socket.id) ? p1 : p2
@@ -87,7 +98,7 @@ function setup_socket() {
         connection_data.opp_id = ""
         reset_objects()
         game_stat.reset(false)
-
+        toggleCanvas();
         labels.opp_id.html("Waiting for other player...")
     })
 }
@@ -101,17 +112,17 @@ function reset_objects() {
 function draw() {
     background(0)
 
-    let colors = [color(56, 142, 60), color(211, 47, 47)]
-    let l_col = (own_p == p1) ? colors[0] : colors[1]
-    let r_col = (own_p == p1) ? colors[1] : colors[0]
-
-    fill(l_col)
-    rect(0, 0, Paddle.PADDLE_H_OFFSET, height)
-    fill(r_col)
-    rect(width-Paddle.PADDLE_H_OFFSET, 0, Paddle.PADDLE_H_OFFSET, height)
-
     if (game_stat.room_filled)
     {
+        let colors = [color(56, 142, 60), color(211, 47, 47)]
+        let l_col = (own_p == p1) ? colors[0] : colors[1]
+        let r_col = (own_p == p1) ? colors[1] : colors[0]
+
+        fill(l_col)
+        rect(0, 0, Paddle.PADDLE_H_OFFSET, height)
+        fill(r_col)
+        rect(width-Paddle.PADDLE_H_OFFSET, 0, Paddle.PADDLE_H_OFFSET, height)
+
         p1.update()
         p2.update()
 

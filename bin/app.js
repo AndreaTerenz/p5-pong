@@ -12,7 +12,7 @@ var server = app.listen(port, () => console.log("Server listening on port " + po
 require("./socket.js")(server)
 
 process.on('SIGINT', () => { 
-    console.log("\rExiting") 
+    console.log("\033[0GExiting") 
     process.exit()
 });
 
