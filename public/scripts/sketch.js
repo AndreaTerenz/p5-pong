@@ -1,19 +1,19 @@
 p5.disableFriendlyErrors = true; // disables FES
 
-var p1, p2
-var own_p, opp_p
-var b
-var score_limit = 20 // prompt("Enter score limit: ", 20);
-var game_stat
-var socket
-var connection_data = {
+let p1, p2
+let own_p, opp_p
+let b
+let score_limit = 20 // prompt("Enter score limit: ", 20);
+let game_stat
+let socket
+let connection_data = {
     id : "",
     room : "",
     opp_id : ""
 }
 
-var labels
-var show_canvas = true
+let labels
+let show_canvas = true
 
 function setup() {
     createCanvas(1000, 500).parent("#sketch_container")
@@ -174,7 +174,7 @@ function draw() {
         textAlign(CENTER, CENTER)
         textSize(30)
     
-        var msg = "Press UP/DOWN or W/S to start"
+        let msg = "Press UP/DOWN or W/S to start"
     
         switch (game_stat.winner) {
             case 1: msg = "Player 1 won!\n" + msg; break;
@@ -189,7 +189,7 @@ function draw() {
         textAlign(CENTER, CENTER)
         textSize(30)
     
-        var msg = "Waiting for second player..."
+        let msg = "Waiting for second player..."
     
         text(msg, width / 2, height / 2)
     }
