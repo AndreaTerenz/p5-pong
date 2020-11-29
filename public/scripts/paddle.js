@@ -1,7 +1,7 @@
 class Paddle {
 
     static PADDLE_SIZE = new p5.Vector(20, 120)
-    static PADDLE_H_OFFSET = 105
+    static H_OFFSET = 105
     static VERTICAL_DELTA = 7
 
     constructor (x, y, side, label = "") {
@@ -37,14 +37,12 @@ class Paddle {
         rect(this.pos.x, this.pos.y, this.size.x, this.size.y)
 
         let offset = undefined
-        if (this.side == "L") offset = createVector(-Paddle.PADDLE_H_OFFSET/2, Paddle.PADDLE_SIZE.y/2)
-        else offset = createVector(Paddle.PADDLE_H_OFFSET/2 + Paddle.PADDLE_SIZE.x, Paddle.PADDLE_SIZE.y/2)
+        if (this.side == "L") offset = createVector(-Paddle.H_OFFSET/2, Paddle.PADDLE_SIZE.y/2)
+        else offset = createVector(Paddle.H_OFFSET/2 + Paddle.PADDLE_SIZE.x, Paddle.PADDLE_SIZE.y/2)
         
         let txt_pos = p5.Vector.add(this.pos, offset)
 
-        textAlign(CENTER, CENTER)
-        textSize(24)
-        text(this.label, txt_pos.x, txt_pos.y)
+        write_text(this.label, color(255), CENTER, 24, txt_pos.x, txt_pos.y)
     }
     
     contains(p) {

@@ -7,31 +7,47 @@ module.exports = function (server) {
     var next_room = rooms_iter.next().value
     rooms_set.delete(next_room)
 
+    var usernames = { }
+
     io.on("connect", (socket) => {
         var socket_room = next_room
+        var username = undefined
         socket.join(socket_room)
 
         console.log("New connection (ID: " + socket.id + " - room: " + socket_room + ")")
+        
+        socket.on("username", (usr) => {
+            username = usr
+            console.log("Socket " + socket.id + " registered for user " + username)
+            if (!usernames[socket_room])
+                usernames[socket_room] = []
+            usernames[socket_room].push(username)
 
-        socket.emit("connection_data", {
-            id: socket.id,
-            opponent: undefined,
-            room: socket_room
-        })
-
-        if (get_room_size(socket_room) >= 2) {
-            console.log("Two clients have joined room [" + socket_room + "]")
-
-            io.to(socket_room).emit("room_filled", Array.from(io.sockets.adapter.rooms.get(socket_room)))
-
-            if (rooms_set.size == 0) {
-                room_count += 1
-                rooms_set.add("room_" + room_count)
+            socket.emit("connection_data", {
+                id: socket.id,
+                room: socket_room
+            })
+    
+            if (get_room_size(socket_room) >= 2) {
+                console.log("Two clients have joined room [" + socket_room + "]")
+                
+                let n = usernames[socket_room]
+                let i = Array.from(io.sockets.adapter.rooms.get(socket_room))
+    
+                io.to(socket_room).emit("room_filled", {
+                    names: n,
+                    ids : i
+                })
+    
+                if (rooms_set.size == 0) {
+                    room_count += 1
+                    rooms_set.add("room_" + room_count)
+                }
+                
+                next_room = rooms_iter.next().value
+                rooms_set.delete(next_room)
             }
-            
-            next_room = rooms_iter.next().value
-            rooms_set.delete(next_room)
-        }
+        })
 
         socket.on("scored", (score) => {
             console.log("Client " + socket.id + " scored");
@@ -46,8 +62,11 @@ module.exports = function (server) {
         socket.on('disconnect', () => {
             console.log("Client " + socket.id + " disconnected");
 
+            usernames[socket_room].splice(usernames[socket_room].indexOf(username), 1)
+
             if (get_room_size(socket_room) < 1) {
                 console.log("Room " + socket_room + " has emptied");
+                delete usernames[socket_room]
             } else {
                 socket.to(socket_room).emit("opp_left")
             }

@@ -9,20 +9,23 @@ let socket
 let connection_data = {
     id : "",
     room : "",
-    opp_id : ""
+    opp_id : "",
+    own_name : "",
+    opp_name : ""
 }
 
 let labels
 let show_canvas = true
 
 function setup() {
+    connection_data.own_name = prompt("Enter username", "")
     createCanvas(1000, 500).parent("#sketch_container")
     toggleCanvas();
 
     setup_socket()
 
-    p1 = new Paddle(Paddle.PADDLE_H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2, "L");
-    p2 = new Paddle((width - Paddle.PADDLE_SIZE.x) - Paddle.PADDLE_H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2, "R");
+    p1 = new Paddle(Paddle.H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2, "L");
+    p2 = new Paddle((width - Paddle.PADDLE_SIZE.x) - Paddle.H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2, "R");
     
     game_stat = new GameStatus()
     labels = {
@@ -32,7 +35,6 @@ function setup() {
     }
 
     textFont("Roboto mono")
-    textSize(30)
 }
 
 function toggleCanvas() {
@@ -47,11 +49,12 @@ function setup_socket() {
     let address = "http://localhost:3500"
 
     socket = io.connect(address)
+    socket.emit("username", connection_data.own_name)
 
     socket.on("connection_data", (data) => { 
         connection_data.id = data.id
         connection_data.room = data.room
-        labels.player_id.html("Player ID: " + connection_data.id)
+        labels.player_id.html("Player ID: " + connection_data.own_name)
         labels.opp_id.html("Waiting for other player...")
         labels.room.html("Room: " + connection_data.room)
      })
@@ -59,18 +62,24 @@ function setup_socket() {
     socket.on("room_filled", (players) => {
         toggleCanvas();
         game_stat.room_filled = true
-        connection_data.opp_id = (players[0] == socket.id) ? players[1] : players[0]
-        own_p = (players[0] == socket.id) ? p1 : p2
-        opp_p = (players[0] == socket.id) ? p2 : p1
 
-        let seed = connection_data.room + players[0] + players[1]
+        let names = players.names
+        let ids = players.ids
+
+        connection_data.opp_id = (ids[0] == connection_data.id) ? ids[1] : ids[0]
+        connection_data.opp_name = (names[0] == connection_data.own_name) ? names[1] : names[0]
+
+        own_p = (ids[0] == connection_data.id) ? p1 : p2
+        opp_p = (ids[0] == connection_data.id) ? p2 : p1
+
+        let seed = connection_data.room + names[0] + names[1] + ids[1] + ids[0]
         if (b) b.reset(seed)
         else b = new Ball(seed)
 
         own_p.label = "You"
-        opp_p.label = "Opp"
+        opp_p.label = connection_data.opp_name
 
-        labels.opp_id.html("Opponent ID: " + connection_data.opp_id)
+        labels.opp_id.html("Opponent ID: " + connection_data.opp_name)
     })
 
     socket.on("opp_scored", (score) => {
@@ -119,9 +128,9 @@ function draw() {
         let r_col = (own_p == p1) ? colors[1] : colors[0]
 
         fill(l_col)
-        rect(0, 0, Paddle.PADDLE_H_OFFSET, height)
+        rect(0, 0, Paddle.H_OFFSET, height)
         fill(r_col)
-        rect(width-Paddle.PADDLE_H_OFFSET, 0, Paddle.PADDLE_H_OFFSET, height)
+        rect(width-Paddle.H_OFFSET, 0, Paddle.H_OFFSET, height)
 
         p1.update()
         p2.update()
@@ -129,7 +138,16 @@ function draw() {
         if (game_stat.playing) {
             b.update(p1, p2)
 
-            draw_ingame_txt()
+            let pos = createVector((width / 2 - Paddle.H_OFFSET) / 2 + Paddle.H_OFFSET, height / 2)
+    
+            let c = color(255, 255, 255, 180)
+            write_text(str(game_stat.score_1), c, RIGHT, 30, pos.x, pos.y)
+            write_text(str(game_stat.score_2), c, LEFT, 30, width - pos.x, pos.y)           
+        
+            //Score limit msg
+            c = color(255, 255, 255, 130)
+            let s = "First player to " + str(score_limit) + " points wins"
+            write_text(s, c, CENTER, 18, width / 2, height - 40)
 
             let scored = game_stat.check_score(b.pos.x, p1.pos.x, p2.pos.x)
             if (scored) {
@@ -147,52 +165,24 @@ function draw() {
                 }
             }
         }
-        else draw_start_msg()
-    }
-    else draw_waiting_msg()
-
-    function draw_ingame_txt() {
-        //Score
-        let pos = createVector((width / 2 - Paddle.PADDLE_H_OFFSET) / 2 + Paddle.PADDLE_H_OFFSET, height / 2)
-    
-        fill(255, 255, 255, 180)
-        textAlign(RIGHT, CENTER)
-        textSize(30)
-        text(str(game_stat.score_1), pos.x, pos.y)
-        textAlign(LEFT, CENTER)
-        text(str(game_stat.score_2), width - pos.x, pos.y)
-    
-        //Score limit msg
-        fill(255, 255, 255, 130)
-        textAlign(CENTER, CENTER)
-        textSize(18)
-        text("First player to " + str(score_limit) + " points wins", width / 2, height - 40)
-    }
-    
-    function draw_start_msg() {
-        fill(255)
-        textAlign(CENTER, CENTER)
-        textSize(30)
-    
-        let msg = "Press UP/DOWN or W/S to start"
-    
-        switch (game_stat.winner) {
-            case 1: msg = "Player 1 won!\n" + msg; break;
-            case 2: msg = "Player 2 won!\n" + msg; break;
+        else {
+            let msg = "Press UP/DOWN or W/S to start"
+        
+            switch (game_stat.winner) {
+                case 1: msg = "Player 1 won!\n" + msg; break;
+                case 2: msg = "Player 2 won!\n" + msg; break;
+            }
+        
+            write_text(msg, color(255), CENTER, 30, width / 2, height / 2)
         }
-    
-        text(msg, width / 2, height / 2)
     }
-    
-    function draw_waiting_msg() {
-        fill(255)
-        textAlign(CENTER, CENTER)
-        textSize(30)
-    
-        let msg = "Waiting for second player..."
-    
-        text(msg, width / 2, height / 2)
-    }
+}
+
+function write_text(str, color, h_align, size, x, y) {
+    fill(color)
+    textAlign(h_align, CENTER)
+    textSize(size)
+    text(str, x, y)
 }
 
 function handle_score() {

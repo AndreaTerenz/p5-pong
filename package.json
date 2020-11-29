@@ -34,9 +34,11 @@
   },
   "nodemonConfig": {
     "verbose": false,
-    "watch": [
-        "bin/*",
-        "public/*"
+    "ignore": [
+        "public/*",
+        "*.json",
+        "README",
+        "LICENSE"
     ],
     "env": { "NODE_ENV": "development" },
     "ext": "js css html"
