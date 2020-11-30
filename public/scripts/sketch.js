@@ -38,11 +38,15 @@ function setup() {
 }
 
 function getUsername() {
-    select("#main").show()
-    select("#input").hide()
-    connection_data.own_name = document.getElementById("name").value
+    let name = document.getElementById("name").value
 
-    setup_socket()
+    if (name) {
+        select("#main").show()
+        select("#input").hide()
+        connection_data.own_name = document.getElementById("name").value
+
+        setup_socket()
+    }
 }
 
 function toggleCanvas() {

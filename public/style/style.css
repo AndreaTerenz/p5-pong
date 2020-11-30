@@ -1,7 +1,12 @@
+:root {
+    --main-bg-col: rgb(48, 74, 187);
+    --main-fg-col: aliceblue;
+}
+
 html {
     margin: 10;
     padding: 0;
-    background-color: rgb(48, 74, 187);
+    background-color: var(--main-bg-col);
 
     font-family: 'Roboto Mono', monospace;
 }
@@ -14,23 +19,86 @@ html {
 
 h1 {
     margin: auto;
+    margin-bottom: 10px;
     text-align: center;
     font: 5em "Roboto Mono";
     font-weight: bold;
+    color: var(--main-bg-col);
+    background-color: var(--main-fg-col);
 }
 
 hr {
     margin-bottom: 20px;
-    border: 5px solid aliceblue;;
+    border: 5px solid var(--main-fg-col);
 }
 
-hr, h1, #connection_data {
-    color: aliceblue;
+hr,
+#connection_data {
+    color: var(--main-fg-col);
 }
 
 canvas {
     margin: auto;
     display: block;
     border: 5px solid;
-    border-color: blanchedalmond;
+    border-color: var(--main-fg-col);
+}
+
+form {
+    /* Center the form on the page */
+    margin: 0 auto;
+    width: fit-content;
+    /* Form outline */
+    padding: 1em;
+    border: 4px solid var(--main-fg-col);
+    border-radius: 1em;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+form li+li {
+    margin-top: 1em;
+}
+
+label {
+    /* Uniform size & alignment */
+    display: inline-block;
+    width: 120px;
+    text-align: right;
+    color: var(--main-fg-col);
+}
+
+input {
+    /* Uniform text field size */
+    width: 300px;
+    box-sizing: border-box;
+
+    /* Match form field borders */
+    border: 1px solid var(--main-fg-col);
+}
+
+textarea {
+    /* Align multiline text fields with their labels */
+    vertical-align: top;
+
+    /* Provide space to type some text */
+    height: 5em;
+}
+
+button {
+    padding: auto;
+    background-color: var(--main-bg-col);
+    border: 3px solid var(--main-fg-col);
+    border-radius: 6px;
+    font-size: larger;
+    color: var(--main-fg-col);
+}
+
+button:hover {
+    background-color: var(--main-fg-col);
+    color: var(--main-bg-col);
 }
