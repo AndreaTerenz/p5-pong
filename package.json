@@ -29,18 +29,21 @@
     "socket.io": "^3.0.2"
   },
   "devDependencies": {
+    "eslint": "^7.14.0",
     "morgan": "^1.10.0",
     "nodemon": "^2.0.6"
   },
   "nodemonConfig": {
     "verbose": false,
     "ignore": [
-        "public/*",
-        "*.json",
-        "README",
-        "LICENSE"
+      "public/*",
+      "*.json",
+      "README",
+      "LICENSE"
     ],
-    "env": { "NODE_ENV": "development" },
+    "env": {
+      "NODE_ENV": "development"
+    },
     "ext": "js css html"
   }
 }
