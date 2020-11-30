@@ -58,6 +58,7 @@ ul {
     list-style: none;
     padding: 0;
     margin: 0;
+    align-content: center;
 }
 
 form li+li {
@@ -67,34 +68,37 @@ form li+li {
 label {
     /* Uniform size & alignment */
     display: inline-block;
-    width: 120px;
+    width: 140px;
     text-align: right;
+    font-size: larger;
     color: var(--main-fg-col);
 }
 
 input {
     /* Uniform text field size */
     width: 300px;
+    background-color: var(--main-fg-col);
     box-sizing: border-box;
-
+    font: large "Roboto Mono";
+    color: var(--main-bg-col);
     /* Match form field borders */
     border: 1px solid var(--main-fg-col);
+    border-radius: 3px;
 }
 
-textarea {
-    /* Align multiline text fields with their labels */
-    vertical-align: top;
-
-    /* Provide space to type some text */
-    height: 5em;
+input:focus {
+    background-color: var(--main-bg-col);
+    color: var(--main-fg-col);
 }
 
-button {
-    padding: auto;
+button,
+button:active {
+    margin: 0 auto;
+    display: block;
     background-color: var(--main-bg-col);
     border: 3px solid var(--main-fg-col);
     border-radius: 6px;
-    font-size: larger;
+    font: larger "Roboto Mono";
     color: var(--main-fg-col);
 }
 
