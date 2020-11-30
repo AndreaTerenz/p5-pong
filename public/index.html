@@ -17,11 +17,30 @@
     <script src="scripts/paddle.js"></script>
     <script src="scripts/game_status.js"></script>
     <script src="scripts/ball.js"></script>
+    <script src="scripts/starter.js"></script>
   </head>
 
   <body>
     <h1>JUST A PONG CLONE</h1><hr>
-    <div id="main">
+    <div id="input">
+      <form>
+        <ul>
+            <li>
+                <label for="username">Username:</label>
+                <input type="text" id="name" name="user_name">
+            </li>
+            <li>
+              <label for="room">Room number:</label>
+              <input type="text" id="room" name="room_num">
+          </li>
+            <li class="button">
+                <button type="button" onclick="getUsername()">YEET</button>
+            </li>
+        </ul>
+        
+    </form>
+    </div>
+    <div id="main" style="display: none;">
       <div id="sketch_container"><script src="scripts/sketch.js"></script></div>
       <div id="connection_data">
         <p id="socket_id" >Waiting for connection...</p><br>

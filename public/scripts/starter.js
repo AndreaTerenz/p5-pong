@@ -1,10 +1,13 @@
 function start() {
-    var NAME = prompt("Insert username", "")
+    console.log(document.getElementById("name").value)
+    console.log(document.getElementById("room").value)
 
-    let container = document.getElementById("sketch_container")
+    //var NAME = document.getElementById("name").value
+
     let script = document.createElement("script")
-    script.src = "./scripts/sketch.js"
-    container.appendChild(script)
+    script.type = "application/javascript"
+    script.src = "scripts/sketch.js"
+    document.getElementById("sketch_container").appendChild(script)
 }
 
 

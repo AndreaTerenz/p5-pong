@@ -14,49 +14,58 @@ let connection_data = {
     opp_name : ""
 }
 
-let labels
+let elements
 let show_canvas = true
 
-function setup() {
-    connection_data.own_name = prompt("Enter username", "")
+function setup() { 
+    //prompt("Enter username", "")
     createCanvas(1000, 500).parent("#sketch_container")
-    toggleCanvas();
-
-    setup_socket()
 
     p1 = new Paddle(Paddle.H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2, "L");
     p2 = new Paddle((width - Paddle.PADDLE_SIZE.x) - Paddle.H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2, "R");
     
     game_stat = new GameStatus()
-    labels = {
+    elements = {
         player_id : select("#socket_id"),
         opp_id : select("#opponent_id"),
-        room : select("#room_id")
+        room : select("#room_id"),
+        container : select("#sketch_container")
     }
 
     textFont("Roboto mono")
+
+    toggleCanvas()
+}
+
+function getUsername() {
+    select("#main").show()
+    select("#input").hide()
+    connection_data.own_name = document.getElementById("name").value
+
+    setup_socket()
 }
 
 function toggleCanvas() {
     show_canvas = !show_canvas
     if (show_canvas)
-        select("#sketch_container").show()
+        elements.container.show()
     else
-        select("#sketch_container").hide()
+        elements.container.hide()
 }
 
 function setup_socket() {
     let address = "http://localhost:3500"
 
     socket = io.connect(address)
+    
     socket.emit("username", connection_data.own_name)
 
     socket.on("connection_data", (data) => { 
         connection_data.id = data.id
         connection_data.room = data.room
-        labels.player_id.html("Player ID: " + connection_data.own_name)
-        labels.opp_id.html("Waiting for other player...")
-        labels.room.html("Room: " + connection_data.room)
+        elements.player_id.html("Player ID: " + connection_data.own_name)
+        elements.opp_id.html("Waiting for other player...")
+        elements.room.html("Room: " + connection_data.room)
      })
 
     socket.on("room_filled", (players) => {
@@ -79,7 +88,7 @@ function setup_socket() {
         own_p.label = "You"
         opp_p.label = connection_data.opp_name
 
-        labels.opp_id.html("Opponent ID: " + connection_data.opp_name)
+        elements.opp_id.html("Opponent ID: " + connection_data.opp_name)
     })
 
     socket.on("opp_scored", (score) => {
@@ -108,7 +117,7 @@ function setup_socket() {
         reset_objects()
         game_stat.reset(false)
         toggleCanvas();
-        labels.opp_id.html("Waiting for other player...")
+        elements.opp_id.html("Waiting for other player...")
     })
 }
 
