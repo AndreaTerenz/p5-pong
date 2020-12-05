@@ -58,7 +58,7 @@ ul {
     list-style: none;
     padding: 0;
     margin: 0;
-    align-content: center;
+    text-align: center;
 }
 
 form li+li {
@@ -91,14 +91,16 @@ input:focus {
     color: var(--main-fg-col);
 }
 
-button,
-button:active {
+button{
     margin: 0 auto;
-    display: block;
-    background-color: var(--main-bg-col);
+    display: inline-block;
     border: 3px solid var(--main-fg-col);
     border-radius: 6px;
     font: larger "Roboto Mono";
+}
+
+button:active {
+    background-color: var(--main-bg-col);
     color: var(--main-fg-col);
 }
 

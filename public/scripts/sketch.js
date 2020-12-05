@@ -38,12 +38,21 @@ function setup() {
 }
 
 function getUsername() {
-    let name = document.getElementById("name").value
+    let n = document.getElementById("name").value
+    let r = document.getElementById("room").value
 
-    if (name) {
+    if (n) {
         select("#main").show()
         select("#input").hide()
-        connection_data.own_name = document.getElementById("name").value
+        
+        connection_data.own_name = n
+        elements.player_id.html("Player: " + connection_data.own_name)
+        elements.opp_id.html("Waiting for other player...")
+
+        if (r) {
+            connection_data.room = r
+            elements.room.html("Room: " + connection_data.room)
+        } 
 
         setup_socket()
     }
@@ -62,13 +71,14 @@ function setup_socket() {
 
     socket = io.connect(address)
     
-    socket.emit("username", connection_data.own_name)
+    socket.emit("name_room", {
+        name : connection_data.own_name,
+        room : connection_data.room
+    })
 
-    socket.on("connection_data", (data) => { 
-        connection_data.id = data.id
-        connection_data.room = data.room
-        elements.player_id.html("Player ID: " + connection_data.own_name)
-        elements.opp_id.html("Waiting for other player...")
+    socket.on("room_id", (room) => { 
+        connection_data.room = room
+        
         elements.room.html("Room: " + connection_data.room)
      })
 
@@ -79,20 +89,20 @@ function setup_socket() {
         let names = players.names
         let ids = players.ids
 
-        connection_data.opp_id = (ids[0] == connection_data.id) ? ids[1] : ids[0]
+        connection_data.opp_id = (ids[0] == socket.id) ? ids[1] : ids[0]
         connection_data.opp_name = (names[0] == connection_data.own_name) ? names[1] : names[0]
 
-        own_p = (ids[0] == connection_data.id) ? p1 : p2
-        opp_p = (ids[0] == connection_data.id) ? p2 : p1
+        own_p = (ids[0] == socket.id) ? p1 : p2
+        opp_p = (ids[0] == socket.id) ? p2 : p1
 
         let seed = connection_data.room + names[0] + names[1] + ids[1] + ids[0]
         if (b) b.reset(seed)
         else b = new Ball(seed)
 
         own_p.label = "You"
-        opp_p.label = connection_data.opp_name
+        opp_p.label = "Opp"
 
-        elements.opp_id.html("Opponent ID: " + connection_data.opp_name)
+        elements.opp_id.html("Opponent: " + connection_data.opp_name)
     })
 
     socket.on("opp_scored", (score) => {
@@ -103,7 +113,7 @@ function setup_socket() {
     })
 
     socket.on("opp_won", (id) => {
-        if (connection_data.id != id && game_stat.playing)
+        if (connection_data.opp_id == id && game_stat.playing)
             game_stat.reset()
     })
 
@@ -174,7 +184,7 @@ function draw() {
                 if (game_stat.check_winner()) {
                     game_stat.reset()
             
-                    socket.emit("won", connection_data.id)
+                    socket.emit("won", socket.id)
                 }
             }
         }
