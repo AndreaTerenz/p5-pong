@@ -7,55 +7,46 @@ let score_limit = 20 // prompt("Enter score limit: ", 20);
 let game_stat
 let socket
 let connection_data = {
-    id : "",
-    room : "",
-    opp_id : "",
-    own_name : "",
-    opp_name : ""
+    id: "",
+    room: "",
+    opp_id: "",
+    own_name: "",
+    opp_name: "",
+    conn_mode: ""
 }
 
 let elements
 let show_canvas = true
 
-function setup() { 
-    //prompt("Enter username", "")
+function setup() {
     createCanvas(1000, 500).parent("#sketch_container")
 
-    p1 = new Paddle(Paddle.H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2, "L");
-    p2 = new Paddle((width - Paddle.PADDLE_SIZE.x) - Paddle.H_OFFSET, (height - Paddle.PADDLE_SIZE.y)/2, "R");
-    
+    p1 = new Paddle(Paddle.H_OFFSET, (height - Paddle.PADDLE_SIZE.y) / 2, "L");
+    p2 = new Paddle((width - Paddle.PADDLE_SIZE.x) - Paddle.H_OFFSET, (height - Paddle.PADDLE_SIZE.y) / 2, "R");
+
     game_stat = new GameStatus()
     elements = {
-        player_id : select("#socket_id"),
-        opp_id : select("#opponent_id"),
-        room : select("#room_id"),
-        container : select("#sketch_container")
+        player_id: select("#socket_id"),
+        opp_id: select("#opponent_id"),
+        room: select("#room_id"),
+        container: select("#sketch_container")
     }
+
+    let address = "http://localhost:3500"
+    socket = io.connect(address)
 
     textFont("Roboto mono")
 
     toggleCanvas()
 }
 
-function getUsername() {
-    let n = document.getElementById("name").value
-    let r = document.getElementById("room").value
+function connect(n, r, m) {
+    connection_data.own_name = n
+    connection_data.conn_mode = m
 
-    if (n) {
-        select("#main").show()
-        select("#input").hide()
-        
-        connection_data.own_name = n
-        elements.player_id.html("Player: " + connection_data.own_name)
-        elements.opp_id.html("Waiting for other player...")
+    if (r) connection_data.room = r
 
-        if (r) {
-            connection_data.room = r
-            elements.room.html("Room: " + connection_data.room)
-        } 
-
-        setup_socket()
-    }
+    setup_socket()
 }
 
 function toggleCanvas() {
@@ -67,20 +58,32 @@ function toggleCanvas() {
 }
 
 function setup_socket() {
-    let address = "http://localhost:3500"
-
-    socket = io.connect(address)
-    
-    socket.emit("name_room", {
-        name : connection_data.own_name,
-        room : connection_data.room
+    socket.emit("user_data", {
+        name: connection_data.own_name,
+        room: connection_data.room,
+        mode: connection_data.conn_mode
     })
 
-    socket.on("room_id", (room) => { 
+    socket.on("room_refused", (reason) => {
+        resetInputs()
+
+        switch (reason) {
+            case "NO_ROOM" : alert("No room was provided"); break
+            case "ROOM_EXISTS" : alert("Room " + connection_data.room + " already exists"); break
+            case "ROOM_FULL" : alert("Room " + connection_data.room + " is already full"); break
+        }
+    })
+
+    socket.on("room_confirmed", (room) => {
         connection_data.room = room
-        
+
+        select("#main").show()
+        select("#input").hide()
+
+        elements.player_id.html("Player: " + connection_data.own_name)
+        elements.opp_id.html("Waiting for other player...")
         elements.room.html("Room: " + connection_data.room)
-     })
+    })
 
     socket.on("room_filled", (players) => {
         toggleCanvas();
@@ -122,7 +125,7 @@ function setup_socket() {
             game_stat.start()
             b.set_movable(true)
         }
-        
+
         opp_p.set_direction(delta)
     })
 
@@ -133,6 +136,8 @@ function setup_socket() {
         toggleCanvas();
         elements.opp_id.html("Waiting for other player...")
     })
+
+    return true
 }
 
 function reset_objects() {
@@ -144,8 +149,7 @@ function reset_objects() {
 function draw() {
     background(0)
 
-    if (game_stat.room_filled)
-    {
+    if (game_stat.room_filled) {
         let colors = [color(56, 142, 60), color(211, 47, 47)]
         let l_col = (own_p == p1) ? colors[0] : colors[1]
         let r_col = (own_p == p1) ? colors[1] : colors[0]
@@ -153,7 +157,7 @@ function draw() {
         fill(l_col)
         rect(0, 0, Paddle.H_OFFSET, height)
         fill(r_col)
-        rect(width-Paddle.H_OFFSET, 0, Paddle.H_OFFSET, height)
+        rect(width - Paddle.H_OFFSET, 0, Paddle.H_OFFSET, height)
 
         p1.update()
         p2.update()
@@ -162,11 +166,11 @@ function draw() {
             b.update(p1, p2)
 
             let pos = createVector((width / 2 - Paddle.H_OFFSET) / 2 + Paddle.H_OFFSET, height / 2)
-    
+
             let c = color(255, 255, 255, 180)
             write_text(str(game_stat.score_1), c, RIGHT, 30, pos.x, pos.y)
-            write_text(str(game_stat.score_2), c, LEFT, 30, width - pos.x, pos.y)           
-        
+            write_text(str(game_stat.score_2), c, LEFT, 30, width - pos.x, pos.y)
+
             //Score limit msg
             c = color(255, 255, 255, 130)
             let s = "First player to " + str(score_limit) + " points wins"
@@ -177,25 +181,28 @@ function draw() {
                 handle_score()
 
                 socket.emit("scored", {
-                    l_score : game_stat.score_1,
-                    r_score : game_stat.score_2
+                    l_score: game_stat.score_1,
+                    r_score: game_stat.score_2
                 })
 
                 if (game_stat.check_winner()) {
                     game_stat.reset()
-            
+
                     socket.emit("won", socket.id)
                 }
             }
-        }
-        else {
+        } else {
             let msg = "Press UP/DOWN or W/S to start"
-        
+
             switch (game_stat.winner) {
-                case 1: msg = "Player 1 won!\n" + msg; break;
-                case 2: msg = "Player 2 won!\n" + msg; break;
+                case 1:
+                    msg = "Player 1 won!\n" + msg;
+                    break;
+                case 2:
+                    msg = "Player 2 won!\n" + msg;
+                    break;
             }
-        
+
             write_text(msg, color(255), CENTER, 30, width / 2, height / 2)
         }
     }
@@ -213,11 +220,17 @@ function handle_score() {
     reset_objects()
 }
 
-function up_key() { return (keyCode == UP_ARROW || key == 'w') }
+function up_key() {
+    return (keyCode == UP_ARROW || key == 'w')
+}
 
-function down_key() { return (keyCode == DOWN_ARROW || key == 's') }
+function down_key() {
+    return (keyCode == DOWN_ARROW || key == 's')
+}
 
-function accept_keypress() { return ((up_key() || down_key()) && game_stat.room_filled) }
+function accept_keypress() {
+    return ((up_key() || down_key()) && game_stat.room_filled)
+}
 
 function move_paddle(delta) {
     own_p.set_direction(delta)
