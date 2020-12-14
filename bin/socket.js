@@ -13,20 +13,21 @@ module.exports = function (server) {
 
             let refusal_reason = undefined
 
-            if (!data.room) {
-                refusal_reason = "NO_ROOM"
-            } else if (data.mode == "create" && get_room_size(data.room) > 0) {
-                refusal_reason = "ROOM_EXISTS"
-            } else if (data.mode == "join" && get_room_size(data.room) != 1) {
-                refusal_reason = "ROOM_FULL"
+            if (!data.room) refusal_reason = "NO_ROOM"
+            else {
+                let size = get_room_size(data.room)
+                if (data.mode == "create" && size > 0)
+                    refusal_reason = "ROOM_EXISTS"
+                else if (data.mode == "join") {
+                    if (size < 1) refusal_reason = "ROOM_NOT_EXISTS"
+                    else if (size > 1) refusal_reason = "ROOM_FULL"
+                }
             }
 
             if (refusal_reason) {
                 socket.emit("room_refused", refusal_reason)
                 return
             }
-
-            console.log(get_room_size(data.room))
 
             socket_room = data.room
 

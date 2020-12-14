@@ -71,12 +71,13 @@ function setup_socket() {
             case "NO_ROOM" : alert("No room was provided"); break
             case "ROOM_EXISTS" : alert("Room " + connection_data.room + " already exists"); break
             case "ROOM_FULL" : alert("Room " + connection_data.room + " is already full"); break
+            case "ROOM_NOT_EXISTS" : alert("Room " + connection_data.room + " doesn't exist"); break
         }
     })
 
     socket.on("room_confirmed", (room) => {
         connection_data.room = room
-
+        
         select("#main").show()
         select("#input").hide()
 
