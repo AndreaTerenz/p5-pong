@@ -32,8 +32,7 @@ function setup() {
         container: select("#sketch_container")
     }
 
-    let address = "http://localhost:3500"
-    socket = io.connect(address)
+    setup_socket()  
 
     textFont("Roboto mono")
 
@@ -46,7 +45,11 @@ function connect(n, r, m) {
 
     if (r) connection_data.room = r
 
-    setup_socket()
+    socket.emit("user_data", {
+        name: connection_data.own_name,
+        room: connection_data.room,
+        mode: connection_data.conn_mode
+    })
 }
 
 function toggleCanvas() {
@@ -58,23 +61,21 @@ function toggleCanvas() {
 }
 
 function setup_socket() {
-    socket.emit("user_data", {
-        name: connection_data.own_name,
-        room: connection_data.room,
-        mode: connection_data.conn_mode
-    })
+    socket = io.connect("http://localhost:3500")
 
     socket.on("room_refused", (reason) => {
+        console.log("room refused : " + reason);
         resetInputs()
 
         if (reason == "NO_ROOM") alert("No room was provided")
         else {
-            let msg = "Room " + connection_data.room + " "
+            let msg = "Room \"" + connection_data.room + "\" "
 
             switch (reason) {
-                case "ROOM_EXISTS" : msg + "already exists"; break
-                case "ROOM_FULL" : msg + "is already full"; break
-                case "ROOM_NOT_EXISTS" : msg + "doesn't exist"; break
+                case "ROOM_EXISTS" : msg += "already exists"; break
+                case "ROOM_FULL" : msg += "is already full"; break
+                case "ROOM_NOT_EXISTS" : msg += "doesn't exist"; break
+                default: console.log("Room assignment failed for unknown reason: " + reason)
             }
 
             alert(msg)
@@ -82,6 +83,7 @@ function setup_socket() {
     })
 
     socket.on("room_confirmed", (room) => {
+        console.log("room confirmed : " + room);
         connection_data.room = room
         
         select("#main").show()
@@ -93,6 +95,7 @@ function setup_socket() {
     })
 
     socket.on("room_filled", (players) => {
+        console.log("room filled");
         toggleCanvas();
         game_stat.room_filled = true
 

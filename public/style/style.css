@@ -3,6 +3,10 @@
     --main-fg-col: aliceblue;
 }
 
+:focus {
+    outline: none;
+}
+
 html {
     margin: 10;
     padding: 0;
@@ -82,7 +86,7 @@ input {
     font: large "Roboto Mono";
     color: var(--main-bg-col);
     /* Match form field borders */
-    border: 1px solid var(--main-fg-col);
+    border: 3px solid var(--main-fg-col);
     border-radius: 3px;
 }
 
@@ -99,12 +103,14 @@ button{
     font: larger "Roboto Mono";
 }
 
-button:active {
+
+
+button:hover {
     background-color: var(--main-bg-col);
     color: var(--main-fg-col);
 }
 
-button:hover {
+button:active {
     background-color: var(--main-fg-col);
     color: var(--main-bg-col);
 }

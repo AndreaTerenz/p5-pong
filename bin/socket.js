@@ -26,6 +26,7 @@ module.exports = function (server) {
 
             if (refusal_reason) {
                 socket.emit("room_refused", refusal_reason)
+                
                 return
             }
 
