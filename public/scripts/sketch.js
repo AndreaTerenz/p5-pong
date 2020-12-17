@@ -16,7 +16,6 @@ let connection_data = {
 }
 
 let elements
-let show_canvas = true
 
 function setup() {
     createCanvas(1000, 500).parent("#sketch_container")
@@ -29,14 +28,17 @@ function setup() {
         player_id: select("#socket_id"),
         opp_id: select("#opponent_id"),
         room: select("#room_id"),
-        container: select("#sketch_container")
+        container: select("#sketch_container"),
+        game_area: select("#game"),
+        inputs: select("#input")
     }
 
     setup_socket()  
 
     textFont("Roboto mono")
 
-    toggleCanvas()
+    showCanvas(false)
+    showGame(false)
 }
 
 function connect(n, r, m) {
@@ -50,14 +52,6 @@ function connect(n, r, m) {
         room: connection_data.room,
         mode: connection_data.conn_mode
     })
-}
-
-function toggleCanvas() {
-    show_canvas = !show_canvas
-    if (show_canvas)
-        elements.container.show()
-    else
-        elements.container.hide()
 }
 
 function setup_socket() {
@@ -86,8 +80,7 @@ function setup_socket() {
         console.log("room confirmed : " + room);
         connection_data.room = room
         
-        select("#main").show()
-        select("#input").hide()
+        showGame(true)
 
         elements.player_id.html("Player: " + connection_data.own_name)
         elements.opp_id.html("Waiting for other player...")
@@ -95,8 +88,7 @@ function setup_socket() {
     })
 
     socket.on("room_filled", (players) => {
-        console.log("room filled");
-        toggleCanvas();
+        showCanvas(true)
         game_stat.room_filled = true
 
         let names = players.names
@@ -143,11 +135,43 @@ function setup_socket() {
         connection_data.opp_id = ""
         reset_objects()
         game_stat.reset(false)
-        toggleCanvas();
+        showCanvas(false)
         elements.opp_id.html("Waiting for other player...")
     })
 
     return true
+}
+
+function showCanvas(show = true) {
+    if (show)
+        elements.container.show()
+    else
+        elements.container.hide()  
+}
+
+function showGame(show = true) {
+    if (show) {
+        elements.game_area.show()
+        elements.inputs.hide()
+    }
+    else {
+        elements.game_area.hide()
+        elements.inputs.show()
+    }  
+}
+
+function quitGame() {
+    for (const [key, _] of Object.entries(connection_data)) {
+        connection_data[key] = ""
+    }
+
+    game_stat.reset(false)
+    reset_objects()
+
+    showCanvas(false)
+    showGame(false)
+
+    socket.emit("quit")
 }
 
 function reset_objects() {

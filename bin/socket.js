@@ -1,11 +1,12 @@
+var usernames = {}
+
 module.exports = function (server) {
     var io = require("socket.io")(server)
-
-    var usernames = {}
 
     io.on("connect", (socket) => {
         var socket_room = undefined
         var username = undefined
+        var room_confirmed = false
 
         console.log("New connection (ID: " + socket.id + ")")
 
@@ -24,9 +25,10 @@ module.exports = function (server) {
                 }
             }
 
-            if (refusal_reason) {
+            room_confirmed = (refusal_reason == undefined)
+
+            if (!room_confirmed) {
                 socket.emit("room_refused", refusal_reason)
-                
                 return
             }
 
@@ -66,16 +68,20 @@ module.exports = function (server) {
         })
 
         socket.on('disconnect', () => {
-            if (socket_room) {
-                console.log("Client " + socket.id + " disconnected");
+            console.log("Client " + socket.id + " disconnected");
 
-                usernames[socket_room].splice(usernames[socket_room].indexOf(username), 1)
+            if (room_confirmed) {
+                removeClientFromRoom(socket, socket_room, username)
+            }
+        });
 
-                if (get_room_size(socket_room) < 1) {
-                    console.log("Room " + socket_room + " has emptied");
-                } else {
-                    socket.to(socket_room).emit("opp_left")
-                }
+        socket.on('quit', () => {
+            console.log("Client " + socket.id + " left its room");
+
+            if (room_confirmed) {
+                socket.leave(socket_room)
+
+                removeClientFromRoom(socket, socket_room, username)
             }
         });
 
@@ -84,10 +90,21 @@ module.exports = function (server) {
             socket.to(socket_room).emit("opp_moved", delta)
         })
     })
-
+    
     function get_room_size(socket_room) {
         var room_ref = io.sockets.adapter.rooms.get(socket_room)
 
         return (room_ref) ? room_ref.size : -1
     }
+
+    function removeClientFromRoom(socket, room, username) {
+        usernames[room].splice(usernames[room].indexOf(username), 1)
+    
+        if (get_room_size(room) < 1) {
+            console.log("Room " + room + " has emptied")
+        } else {
+            socket.to(room).emit("opp_left")
+        }
+    }
 }
+
